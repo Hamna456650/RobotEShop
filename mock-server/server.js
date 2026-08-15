@@ -334,6 +334,7 @@ function toCard(robot) {
     category: robot.category,
     image: robot.image,
     price: robot.price,
+    currency: robot.currency,
     priceLabel: formatPrice(robot.price, robot.currency),
     offerCount: robot.offerCount,
     verified: robot.hasVerifiedSeller,
