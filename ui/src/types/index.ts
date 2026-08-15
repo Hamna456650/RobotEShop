@@ -128,4 +128,43 @@ export interface ErrorState {
   hasError: boolean;
   message: string;
   code?: string;
-} 
+}
+
+/* TUTORIALS
+   =========
+   The editorial layer the scraper deliberately leaves empty
+   (`tutorial_videos`, `getting_started_guide` in scraper/robotshop/models.py).
+   Shapes below are what the page needs; the fields map one-to-one onto that
+   schema plus a bill of materials drawn from the catalogue. */
+
+export type TutorialFormat = 'video' | 'guide' | 'wiring';
+
+export type TutorialLevel = 'Beginner' | 'Intermediate' | 'Advanced';
+
+/** One line of a tutorial's bill of materials, priced from the catalogue. */
+export interface TutorialPart {
+  /** Catalogue product name, shortened to fit a receipt line. */
+  name: string;
+  qty: number;
+  /** Unit price in PKR. */
+  price: number;
+}
+
+export interface Tutorial {
+  id: string;
+  title: string;
+  summary: string;
+  /** Path under public/images — reuses a real catalogue photo. */
+  image: string;
+  format: TutorialFormat;
+  level: TutorialLevel;
+  /** Mirrors the navbar taxonomy. */
+  category: string;
+  platforms: string[];
+  /** Runtime for a video. Null for anything written. */
+  runtimeSec: number | null;
+  steps: number;
+  /** Editorially built and checked against real hardware. */
+  verifiedBuild: boolean;
+  parts: TutorialPart[];
+}

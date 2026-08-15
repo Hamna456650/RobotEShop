@@ -33,6 +33,18 @@ code {
     monospace;
 }
 
+/* Category strip. It is a fixed 57px, so the links scroll sideways rather than
+   wrapping — and the native horizontal bar is hidden, because at 15px tall it
+   would take a quarter of the strip. */
+.nav-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav-strip::-webkit-scrollbar {
+  display: none;
+}
+
 .grad {
   background: rgb(0, 0, 0);
   background: linear-gradient(

@@ -526,7 +526,9 @@ html {
   --rule: #d8dee7;
   --signal: #ff8a00;
   --verified: #1b9e5a;
-  --mono: ui-monospace, "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  /* Plex first: with `ui-monospace` ahead of it this resolved to Consolas on
+     Windows, so the card figures were set in the system code-editor face. */
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
 
   /* One scrolling line rather than a wrapping grid: a result set of any size
      then costs exactly one card height, leaving the rest of the panel to the

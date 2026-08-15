@@ -34,6 +34,27 @@
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!--
+      Lato, the typeface the catalogue's reference layout is set in. It is under
+      the SIL Open Font License, so unlike NVIDIA Sans it can be used here.
+      See DESIGN.md section 9.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      IBM Plex Mono is the first name in the mono stack DESIGN.md section 2
+      prescribes for figures, but it was never actually loaded — so on Windows
+      every price, count and spec value silently rendered in Consolas, the
+      system code-editor face. Loading it makes the stack mean what it says.
+
+      It is also the right face for the job: Plex was drawn for engineering
+      documentation, which is what a parts catalogue is.
+    -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.

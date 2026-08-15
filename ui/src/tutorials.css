@@ -1,0 +1,820 @@
+/**
+ * Tutorials page.
+ *
+ * Every colour, size and radius here comes from DESIGN.md. Three rules shape
+ * the page:
+ *
+ *   - Green is for things you can act on. Amber is for information on a data
+ *     surface, and never becomes clickable.
+ *   - Every number a reader compares — a price, a runtime, a part count — is
+ *     set in the mono stack, so figures line up in a column.
+ *   - Figures are ranked, not uniform. See "FIGURES" below.
+ */
+
+.tutorials {
+  --primary: #76b900;
+  --signal: #ff8a00;
+  --verified: #1b9e5a;
+
+  --ink: #101826;
+  --slate: #5a6678;
+  --muted: #666666;
+  --strong: #202020;
+  --rule: #d8dee7;
+  --hairline: #ececec;
+  --field: #d8d8d8;
+
+  --panel: #f9f9f9;
+  --media: #f7f8fa;
+
+  /* Plex first. The old order put `ui-monospace` ahead of it, which on Windows
+     resolves to Consolas and quietly threw the chosen face away. */
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* 106px is the navbar plus the category strip, matching .product-pane. */
+  height: calc(100vh - 106px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--panel);
+  font-family: "NVIDIA Sans", sans-serif;
+  color: var(--ink);
+  scrollbar-width: thin;
+  scrollbar-color: #cfcfcf transparent;
+}
+
+.tutorials::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tutorials::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tutorials::-webkit-scrollbar-thumb {
+  background: #cfcfcf;
+  border-radius: 4px;
+}
+
+.tutorials::-webkit-scrollbar-thumb:hover {
+  background: #b0b0b0;
+}
+
+.tutorials :focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* FIGURES
+   =======
+   Every number used to be set at roughly one size, so a kit total, a step
+   count and a facet count all carried the same weight — which is another way
+   of saying none of them carried any. They are ranked in three tiers, and the
+   membership of each tier is listed here rather than scattered through the
+   file, so the ranking stays legible.
+
+   Lining tabular figures throughout, and tracking pulled in: Plex Mono is
+   drawn wide for code, and a price is not code. */
+
+/* Tier 1 — the number a decision turns on. */
+.tut-card__amount,
+.tut-bom__total .tut-bom__cost {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+
+/* The kit total is the one figure with nothing above it in the hierarchy, so
+   it takes the extra step up. */
+.tut-bom__total .tut-bom__cost {
+  font-size: 1.06rem;
+}
+
+/* Tier 2 — a figure read in passing. */
+.tut-bom__cost,
+.tut-card__length,
+.tut-card__runtime,
+.tut-hero__lead b,
+.tut-toolbar__count b {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-size: 0.79rem;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+
+/* Tier 3 — bookkeeping you should be able to ignore. */
+.tut-bom__qty,
+.tut-rail__count,
+.tut-card__parts {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--slate);
+}
+
+/* The currency is a mark on the amount, not part of it. Setting "Rs" at the
+   amount's own size and weight is what made a price read as a string. */
+.fig__unit {
+  font-size: 0.62em;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--slate);
+  margin-right: 0.36em;
+}
+
+.tut-shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* HERO
+   ====
+   No stat tiles and no gradient. Coverage used to sit here as a strip of tiny
+   uppercase figures joined by middots, which is a decoration pretending to be
+   data. It is a sentence now, and only the figures inside it are set apart. */
+.tut-hero {
+  background: #ffffff;
+  border-bottom: 1px solid var(--hairline);
+  padding: 26px 0 24px;
+}
+
+.tut-hero__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+  gap: 18px 48px;
+  align-items: end;
+}
+
+.tut-hero__title {
+  margin: 0;
+  max-width: 17ch;
+  color: var(--strong);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.tut-hero__lead {
+  margin: 10px 0 0;
+  max-width: 52ch;
+  color: var(--slate);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.tut-hero__lead + .tut-hero__lead {
+  margin-top: 8px;
+}
+
+.tut-hero__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tut-hero__lead b {
+  color: var(--ink);
+}
+
+.tut-hero__note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Search sits in the hero because finding a part by name is the way most
+   people arrive here — they already own the sensor. */
+.tut-search {
+  position: relative;
+}
+
+.tut-search input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--field);
+  border-radius: 15px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tut-search input::placeholder {
+  color: #9aa4b2;
+}
+
+.tut-search input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+}
+
+/* BODY: filter rail + results
+   ========================== */
+.tut-body {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  gap: 28px;
+  padding: 24px 0 48px;
+  align-items: start;
+}
+
+.tut-rail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tut-rail__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.tut-rail__legend {
+  padding: 0;
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.tut-rail__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13.5px;
+  color: var(--strong);
+  cursor: pointer;
+}
+
+.tut-rail__option input {
+  accent-color: var(--primary);
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.tut-rail__label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tut-rail__count {
+  flex: 0 0 auto;
+}
+
+.tut-rail__option--off .tut-rail__label,
+.tut-rail__option--off .tut-rail__count {
+  color: #a7aeb9;
+}
+
+.tut-clear {
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* FEATURED BUILD
+   ==============
+   The page's one loud element. Half of it is a bill of materials priced from
+   the catalogue, which is the thing a course site cannot show and a parts shop
+   with no tutorials cannot either. */
+.tut-featured {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  background: #ffffff;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(16, 24, 38, 0.08);
+}
+
+.tut-featured__media {
+  position: relative;
+  background: var(--media);
+  border-right: 1px solid var(--rule);
+  min-height: 260px;
+}
+
+/* Absolute rather than height:100% — a grid item's height is not a resolvable
+   percentage basis, so the image would otherwise sit at its natural size with
+   white bands above and below. */
+.tut-featured__media img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tut-featured__body {
+  padding: 22px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Sentence case and slate, not amber small caps. Amber is the data accent —
+   spending it on a label that carries no data is what makes an accent stop
+   meaning anything. */
+.tut-eyebrow {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--slate);
+}
+
+.tut-featured__title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.tut-featured__summary {
+  margin: 0;
+  color: var(--slate);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* The receipt. Mono throughout, right-aligned figures, one rule above the
+   total — read it the way you read a till slip. */
+.tut-bom {
+  margin: 4px 0 0;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--media);
+  padding: 12px 14px;
+}
+
+.tut-bom__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.tut-bom__legend {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.tut-bom__unit {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #8d96a4;
+}
+
+.tut-bom__table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--ink);
+}
+
+.tut-bom__table td {
+  padding: 4px 0;
+  vertical-align: baseline;
+}
+
+/* Part names stay in the UI face. Only the figures are mono — running the
+   whole ledger in Plex Mono made the names shout as loudly as the prices. */
+.tut-bom__name {
+  width: 100%;
+  padding-right: 12px !important;
+  color: var(--slate);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.tut-bom__qty {
+  text-align: right;
+  white-space: nowrap;
+  padding-right: 14px !important;
+  color: #8d96a4;
+}
+
+.tut-bom__cost {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tut-bom__total td {
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+
+.tut-bom__total .tut-bom__name {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.tut-featured__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.tut-button {
+  border: 0;
+  border-radius: 15px;
+  background: var(--primary);
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.tut-button:hover {
+  filter: brightness(0.93);
+}
+
+.tut-button--quiet {
+  background: none;
+  color: var(--primary);
+  padding: 10px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tut-button--quiet:hover {
+  filter: none;
+  color: #5f9600;
+}
+
+/* TOOLBAR
+   ======= */
+.tut-toolbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 28px 0 12px;
+}
+
+/* Sentence case, not an uppercase mono tag. The count is a fact about the
+   page, and facts are written, not stamped. */
+.tut-toolbar__count {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--slate);
+}
+
+.tut-toolbar__count b {
+  color: var(--ink);
+  font-weight: 600;
+  margin-right: 1px;
+}
+
+.tut-sort {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.tut-sort select {
+  border: 1px solid var(--field);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--strong);
+  cursor: pointer;
+}
+
+.tut-sort select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+}
+
+/* CARDS
+   =====
+   Same family as .robot-card in chatbox.css — 10px radius, hairline rule,
+   mono figures — widened because a title here is a sentence, not a part name. */
+.tut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The card fills its grid cell, so the price rules across a row land on one
+   baseline even when one title runs longer than its neighbours. */
+.tut-grid > li {
+  display: flex;
+}
+
+.tut-grid > li > .tut-card {
+  flex: 1 1 auto;
+}
+
+.tut-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(16, 24, 38, 0.08);
+  text-align: left;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.tut-card:hover {
+  border-color: #b9c3d1;
+  box-shadow: 0 4px 12px rgba(16, 24, 38, 0.12);
+  transform: translateY(-2px);
+}
+
+.tut-card__media {
+  position: relative;
+  background: var(--media);
+  border-bottom: 1px solid var(--rule);
+}
+
+.tut-card__media img {
+  display: block;
+  width: 100%;
+  height: 148px;
+  object-fit: cover;
+}
+
+/* The thumbnail carries one mark, not three.
+   It used to hold a verified badge and a format pill as well — but twelve of
+   fourteen tutorials are verified, so that badge coloured almost every card
+   and told you nothing, and the format is now written in the body line where
+   it can be read rather than decoded. What is left is the runtime, on videos
+   only, which is where a viewer looks for it. */
+.tut-card__runtime {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: rgba(16, 24, 38, 0.86);
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.tut-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px 12px;
+  flex: 1 1 auto;
+}
+
+.tut-card__title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* Exactly two lines of the line-height above, so a one-line title reserves
+     the same space as a two-line one. */
+  min-height: 2.6em;
+}
+
+/* One real link per card, stretched over the whole card. Keyboard users get a
+   single stop and a focus ring that outlines the card, not the words. */
+.tut-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tut-card__title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.tut-card:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+}
+
+.tut-card__title a:focus-visible {
+  outline: none;
+}
+
+.tut-card__meta {
+  margin: 0;
+  color: var(--slate);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.tut-card__chips {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 4px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tut-card__chip {
+  margin: 0;
+  padding: 2px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--media);
+  color: var(--slate);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tut-card__chip--level {
+  border-color: rgba(255, 138, 0, 0.35);
+  background: rgba(255, 138, 0, 0.1);
+  color: #9a5200;
+}
+
+.tut-card__kit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.tut-card__parts {
+  white-space: nowrap;
+}
+
+.tut-card__length {
+  margin: 0;
+  color: var(--signal);
+}
+
+/* EMPTY STATE
+   ===========
+   Says what happened and what the library actually covers, rather than
+   "no results". */
+.tut-empty {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 32px 28px;
+  max-width: 56ch;
+}
+
+.tut-empty h3 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tut-empty p {
+  margin: 0 0 14px;
+  color: var(--slate);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.tut-empty p:last-child {
+  margin-bottom: 0;
+}
+
+/* RESPONSIVE
+   ==========
+   The rail is the first thing to give up its column; the cards keep their
+   proportions all the way down. */
+@media (max-width: 1080px) {
+  .tut-body {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 22px;
+  }
+}
+
+@media (max-width: 900px) {
+  .tut-hero__inner {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .tut-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tut-rail {
+    position: static;
+    flex-flow: row wrap;
+    gap: 20px 32px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  /* Side by side the groups would otherwise size to their longest label, and
+     the counts would sit at four different distances from the text. */
+  .tut-rail__group {
+    min-width: 160px;
+  }
+
+  .tut-featured {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tut-featured__media {
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .tut-featured__media img {
+    height: 220px;
+  }
+}
+
+@media (max-width: 640px) {
+  .tut-shell {
+    padding: 0 18px;
+  }
+
+  .tut-hero__title {
+    font-size: 27px;
+  }
+
+  .tut-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tut-featured__actions {
+    flex-flow: row wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tut-card {
+    transition: none;
+  }
+
+  .tut-card:hover {
+    transform: none;
+  }
+}
