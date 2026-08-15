@@ -40,6 +40,9 @@ First-time only, install the UI dependencies with `cd ui && npm ci`.
 
 ## What works
 
+- **A browsable catalogue** at `/` — all 2,880 products behind a faceted filter
+  sidebar (category, price band, platform, skill, stock), 48 to a page. Until
+  now the catalogue was reachable only by knowing what to ask the assistant for
 - Streaming chat replies, rendered token by token exactly like the real backend
 - Robot search over the 36-item catalogue, with filters parsed from plain language
 - **Robot spec cards** showing verified seller, age and skill fit, platform and
@@ -98,11 +101,54 @@ every request, so restoring the toggle is a UI-only change. Removing the MUI
 Verified with `npx tsc --noEmit` (clean) and no new console errors — the six MUI
 PropTypes warnings are upstream's and were there before.
 
+## Pages
+
+| Route | What it is |
+|---|---|
+| `/` | Catalogue, unfiltered — the front door |
+| `/catalog/:category` | Catalogue with a category preset; the navbar strip links here |
+| `/tutorials` | Tutorials |
+| `/assistant` | The original chat-led screen: full-height panel beside the splash image |
+
+Filter state lives entirely in the query string, so a filtered view is a
+shareable link and the back button works:
+`/catalog/sensors?platform=Arduino&price=under-500&sort=price-asc`.
+
+On the catalogue the assistant is a launcher in the bottom-right rather than a
+docked panel — the grid needs the width. It is the same `Chatbox` component,
+reframed by `.chat-widget` in `catalog.css`; `chatbox.css` is untouched, so
+`/assistant` still renders exactly as before.
+
+### Where the catalogue layout comes from
+
+The card and grid are matched to a measured reference rather than designed from
+scratch: computed styles were read off
+[thepihut.com/collections/sensors](https://thepihut.com/collections/sensors) at
+a 1440px viewport and are marked `[ref]` in `ui/src/catalog.css` — 183px cards,
+32px gaps, 6px radius, `0 0 15px 1px rgba(0,0,0,.07)` shadow, 14px/700 titles,
+15px/700 prices.
+
+Two deliberate departures from DESIGN.md, both noted inline where they occur:
+
+| DESIGN.md says | The catalogue does | Why |
+|---|---|---|
+| Cover-crop card images (§5) | `object-fit: contain` in a square box | Supplier photos are shot on white; cropping cuts pins and connectors off. The square box already keeps card heights equal, which is what the rule was protecting |
+| Cards get a 1px `#D8DEE7` border, 10px radius (§4) | No border, 6px radius, shadow only | The reference's card, and the borderless version is what reads as current |
+
+Colour needed no compromise: the reference prices in `#74AC2A` and DESIGN.md's
+`--primary` is `#76B900`, near enough the same hue that the project token drops
+straight in. DESIGN.md's mono-for-numbers rule (§2) is applied to the facet
+counts, result totals and page numbers — places the reference has no equivalent
+for, so nothing is lost by following the house rule there.
+
 ## Layout
 
 ```
 ui/                    React 18 + TypeScript + Tailwind + MUI (Create React App)
   src/components/      Navbar, Apparel (splash image), chatbox/
+  src/components/catalog/  Catalog, FilterSidebar, ProductCard, ChatWidget
+  src/hooks/useCatalog.ts  Fetches GET /catalog for the current query string
+  src/catalog.css      Catalogue styling, with the measured values marked [ref]
   src/config/config.ts API base URL, categories, feature flags
   public/images/robots/ 36 generated placeholder SVGs
   .env                 Points the UI at the mock server
@@ -152,8 +198,15 @@ ones it applied:
 
 ### Product images
 
-All 144 photos are already downloaded to `ui/public/images/`, so the app runs
-offline. The scraper writes them there via `image_dir` in `scraper/config.yaml`.
+**The app no longer runs offline.** `ui/public/images/` holds 369 files from the
+earlier 144-listing crawl, but none of the 2,880 products in the current
+`scraper/data/robots.json` carry a `local_path` — every one resolves to a remote
+supplier URL, so the catalogue needs a network connection to show photos.
+Re-running the scraper with `image_dir` set in `scraper/config.yaml` is what
+restores local copies.
+
+`ProductCard` degrades to a labelled "No photo" tile when an image fails, so a
+blocked hotlink leaves the grid even rather than showing a broken image.
 
 Note that some supplier photos carry vendor watermarks — worth filtering on when
 you pick imagery for anything prominent.

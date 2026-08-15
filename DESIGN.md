@@ -81,11 +81,25 @@ rather than as retail — do not skip it.
 |---|---|---|
 | UI | `"NVIDIA Sans", sans-serif` | Everything by default |
 | Body | system stack on `body` | Fallback outside the chat panel |
-| **Data** | `ui-monospace, "IBM Plex Mono", "SFMono-Regular", Consolas, monospace` | **All numerals**: prices, chips, badges, part codes |
+| **Data** | `"IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace` | **All numerals**: prices, chips, badges, part codes |
 
 > Every number a user compares — a price, a spec value, a part code — is set in
 > mono. Monospaced figures align in a column, which is the whole point when the
 > job is comparison.
+
+**Load IBM Plex Mono, and name it first.** The stack originally led with
+`ui-monospace`, which on Windows resolves to Consolas — so every figure in the
+app was silently set in the system code-editor face while the CSS claimed
+otherwise. Plex is loaded in `ui/public/index.html`. If you copy this system,
+copy the webfont link too, or the stack is decorative.
+
+Figures are ranked, not uniform. A price a decision turns on, a line cost, and
+a bookkeeping count are three different kinds of fact and are set at three
+sizes — see the `FIGURES` block in `ui/src/tutorials.css`. Setting them all at
+one size is what makes a data surface read as machine output.
+
+The currency is a mark on the amount, not part of it: `Rs` is set at `0.62em`,
+weight 500, in slate, so the digits carry the price.
 
 ### Scale
 

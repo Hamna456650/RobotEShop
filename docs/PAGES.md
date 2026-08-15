@@ -6,6 +6,19 @@ can actually support today. Measured on `scraper/data/robots.json`:
 
 ---
 
+> **Status, August 2026.** Steps 1 and 2 below are built. `react-router-dom` is
+> in, and the catalogue lives at `/` and `/catalog/:category` with a faceted
+> sidebar over `GET /catalog`. Category pages (step 4) came free with it — the
+> navbar strip's dead `#` links now route.
+>
+> **The recommendation below was not followed.** Option A put the catalogue in
+> the left pane; the catalogue was instead built full-width with the assistant
+> as a corner launcher, because the layout it is matched to needs 828px of card
+> column and the left pane offers about 380px after the filter rail. The
+> assistant is one click away rather than always visible — the cost of that
+> trade is real and is the thing to revisit if the chat↔filter wiring makes the
+> two feel disconnected.
+
 ## The architectural decision first
 
 There is no router. `App.tsx` renders one screen: navbar, a static left pane,
@@ -133,9 +146,19 @@ server-side (`carts` in `server.js`) with no UI.
 
 ## Suggested order
 
-1. Router + left pane as the page surface
-2. Browse with filters
-3. Product detail
-4. Category pages and cart (nearly free by then)
+1. ~~Router + left pane as the page surface~~ — done, full-width rather than the pane
+2. ~~Browse with filters~~ — done
+3. **Product detail** — next. Cards currently link out to the seller, which is
+   the one obvious gap now that browsing works
+4. ~~Category pages~~ (done) and cart
 5. Compare
 6. Start weekly crawls so price history has something to show later
+
+## Not yet wired: chat ↔ filters
+
+The feature named above as "neither a plain catalogue nor a plain chatbot" is
+still unbuilt. The groundwork is in place: `parseFilters()` in `server.js`
+already turns "beginner Arduino sensors under Rs 500" into a filter object, and
+the catalogue's filter state is entirely in the URL query string. Connecting
+them means having the assistant push a query string and the catalogue announce
+its changes back — no restructuring, just the wire.
