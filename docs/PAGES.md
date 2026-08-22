@@ -53,8 +53,9 @@ Add `react-router-dom` and route only that pane.
 | 4. Category pages | Medium | ✅ Yes | Navbar links are dead `#` today; ~free once browse exists |
 | 5. Cart / shortlist | Medium | ✅ Yes | Server already tracks a cart — there is no UI for it |
 | 6. Price history | Medium | ❌ No | 1 price point per product; needs repeat crawls |
-| 7. Tutorials / learn | **High** | ❌ No | 0% populated — your stated differentiator |
+| 7. Tutorials / learn | **High** | ✅ **Built** | 89 real tutorials — 87 indexed from RobotShop Community via the Internet Archive, plus curated pages from The Construct and RoboDK fetched live; 68 carry a parts list priced from the catalogue |
 | 8. Seller profiles | Low | ❌ No | `seller_verified` null across all 3,269 |
+| 9. Community reviews | **High** | ✅ **Built** | Needs no scraped data — the content is written by readers. `localStorage` today, behind an async store that swaps to Supabase |
 
 ---
 
@@ -125,9 +126,27 @@ server-side (`carts` in `server.js`) with no UI.
 - **Price history** needs repeat crawls. One scheduled re-run per week starts
   accumulating `price_history` immediately — worth starting now, since the data
   only becomes useful after weeks of collection.
-- **Tutorials** are 0% and deliberately not scraped. `models.py` calls this an
-  editorial pass. Since it is your headline gap, it needs a plan: even 20
-  products with 3 curated links each would demo it.
+- **Tutorials** are done, by a route the original plan did not consider. The
+  product schema's `tutorial_videos` is still empty and still an editorial
+  field — but the tutorials *page* no longer waits on it. `run_tutorials.py`
+  indexes 87 real tutorials from the Internet Archive's snapshots of
+  community.robotshop.com and prices the parts each one names against the
+  scraped catalogue.
+
+  It now takes a second kind of source as well: a curated list of individual
+  pages from publishers who serve us directly, in
+  `scraper/robotshop/tutorials/external.py`. Adding one is a line in that
+  tuple. The first two are The Construct's *C++ for Robotics* and RoboDK's
+  *Free Robot Training*, and the first of them is the only row in the whole
+  project — product or tutorial — that carries ROS, which is the coverage gap
+  named in the README. A "Published by" facet appeared on the page the moment
+  there was more than one publisher to choose between.
+
+  The join is the point, and it is the thing no competitor has: RobotShop can
+  teach the build but cannot tell a student in Lahore what it costs, and Robo.pk
+  can price the parts but publishes no lessons. What is still missing is the
+  reverse link — a product page saying "3 tutorials use this part" — which is a
+  `match_key` lookup away now that `parts[].matchKey` exists.
 - **Verified sellers** needs a rule for what "verified" means. Right now nothing
   populates it, so the badge never shows.
 
@@ -153,6 +172,36 @@ server-side (`carts` in `server.js`) with no UI.
 4. ~~Category pages~~ (done) and cart
 5. Compare
 6. Start weekly crawls so price history has something to show later
+7. ~~Community reviews~~ — done, at `/community`
+
+## 9. Community reviews
+
+The one page here that was never blocked on the crawl: readers supply the
+content. It closes the same gap tutorials do — a catalogue can say what a part
+costs and who stocks it, and cannot say that the cheap ultrasonic module needs
+a pull-up or that one seller's batch arrives dead.
+
+A review is a **bench report**, not a star rating. Past the score and the prose
+it carries three fields the general marketplaces do not: the board it was tested
+on, how long it has been in use, and whether the unit arrived working. All three
+are optional; the arrival answers aggregate into the dead-on-arrival rate in the
+hero, which is the figure the page exists to publish.
+
+Every review is pinned to a catalogue product through the typeahead over
+`GET /catalog?q=`, and the product is denormalised into the review — ids do not
+survive a re-crawl, so a review holding only an id would lose its subject.
+
+**Storage is the seam.** `ui/src/data/reviewStore.ts` is the only file that
+knows about `localStorage`, and every function is already `async`, so Supabase
+is a rewrite of that file alone. Its header comment carries the target table.
+
+Two things worth doing next, both cheap now the page exists:
+
+- **Reviews on the product detail page.** Detail is step 3 above; the store
+  already keys reviews by product, so the ratings summary is a filter away.
+- **A rating column in the catalogue.** Once reviews are shared rather than
+  device-local, `sort=rating-desc` belongs beside the price sorts in
+  `buildCatalog()`.
 
 ## Not yet wired: chat ↔ filters
 

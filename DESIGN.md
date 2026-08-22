@@ -142,11 +142,45 @@ them rather than deriving from a scale.
 | Chip padding | `2px 6px` |
 | Chip gap | 4px |
 | Card price rule spacing | 6px above |
+| Page header band | ~115px, `14px 0 13px` |
 
 **Chrome stays compact so content gets the room.** The fixed furniture in the
 chat panel totals ~200px; everything left over goes to the conversation. When
 adapting this to another screen, keep that priority — trim the chrome, never
 the content area.
+
+### Page headers
+
+**Never open a page with a band of empty space above the first real thing on
+it.** A header is a label on the page, not a landing page: it names where you
+are and holds the one control people arrive wanting. Everything else belongs in
+the content below it.
+
+The tutorials band (`.tut-hero`) is the worked example. It was ~250px — a 30px
+display title wrapped to two lines, three lines of lead, a second paragraph
+under that — so at 1440×900 the first tutorial was below the fold and the top
+of the page was mostly white. It is ~115px now, and the rules that hold it
+there are the ones to copy:
+
+- **Title at 20px, on one line.** A display size plus a narrow `17ch` measure
+  wraps the title and doubles the band on its own. Widen the measure before you
+  reach for a smaller type size.
+- **A header measure, not an article measure.** 52ch is right for reading prose
+  and wrong here — it only buys extra lines. The lead runs to 88ch and wraps at
+  two.
+- **Put the control beside the words, not under them.** Search in a second
+  column costs the band nothing; stacked it adds ~50px. Below 900px it stacks,
+  so the copy has to be short enough to survive that.
+- **One lead and one supporting line.** If a third paragraph is needed, the
+  page needs it — the header does not.
+
+The community band (`.com-hero`) is held to the same height by the same rules,
+and adds one more: **put the control beside the search, not under it.** A button
+stacked above a field costs the band its own height twice over.
+
+The test is what fits on screen at 1440×900 without scrolling: navbar, header,
+and the first row of content. If the first card is below the fold, the header is
+too tall.
 
 ---
 
@@ -205,6 +239,23 @@ Two rules that keep a row tidy:
 
 Conditional fields degrade quietly: no verified flag means no badge, zero
 tutorials means no line. Never render an empty label.
+
+### Reply threads
+
+One post, one thread, and the thread is flat. Replies render inside the card
+they answer — a tinted, inset panel with a hairline above it, not a second
+bordered box, because a box on a card reads as a second post. Each reply carries
+a 2px rule down its left edge; that one line says "these hang off the thing
+above" without an indent tree.
+
+Nesting is the thing to avoid. A reply to a reply is an `@name` in the same
+box, so a long argument stays one readable column instead of a branch nobody
+expanded. One thread is open at a time, page-wide, and the unsent draft survives
+closing it — a rule the page enforces must not cost the reader what they typed.
+
+The control that opens a thread is also the thing that counts it: `Reply` when
+there are none, `3 replies` when there are. Two controls would be two doors into
+one room.
 
 ### Card rows scroll sideways
 
