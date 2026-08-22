@@ -98,7 +98,7 @@
 .tut-bom__cost,
 .tut-card__length,
 .tut-card__runtime,
-.tut-hero__lead b,
+.tut-hero__coverage b,
 .tut-toolbar__count b {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums lining-nums;
@@ -141,57 +141,68 @@
    ====
    No stat tiles and no gradient. Coverage used to sit here as a strip of tiny
    uppercase figures joined by middots, which is a decoration pretending to be
-   data. It is a sentence now, and only the figures inside it are set apart. */
+   data. It is a sentence now, and only the figures inside it are set apart.
+
+   The band is a label on the page, not a landing page. It was a 30px display
+   title over three lines of lead and a second paragraph — ~250px of mostly
+   nothing above the fold. Everything here is sized to keep the whole header
+   near 110px: the title steps down to 20px on one line, the lead runs wider
+   so it wraps at two, and the search sits alongside rather than under. */
 .tut-hero {
   background: #ffffff;
   border-bottom: 1px solid var(--hairline);
-  padding: 26px 0 24px;
+  padding: 14px 0 13px;
 }
 
 .tut-hero__inner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
-  gap: 18px 48px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: 12px 44px;
+  align-items: center;
 }
 
 .tut-hero__title {
   margin: 0;
-  max-width: 17ch;
   color: var(--strong);
-  font-size: 30px;
+  font-size: 20px;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.01em;
 }
 
+/* Wide on purpose. A 52ch measure is right for an article and wrong for a
+   header — here it just buys extra lines nobody reads more slowly for. */
 .tut-hero__lead {
-  margin: 10px 0 0;
-  max-width: 52ch;
+  margin: 5px 0 0;
+  max-width: 88ch;
   color: var(--slate);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.tut-hero__lead + .tut-hero__lead {
-  margin-top: 8px;
+.tut-hero__coverage {
+  margin: 4px 0 0;
+  color: var(--slate);
+  font-size: 12.5px;
+  line-height: 1.45;
 }
 
 .tut-hero__aside {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.tut-hero__lead b {
+.tut-hero__lead b,
+.tut-hero__coverage b {
   color: var(--ink);
 }
 
 .tut-hero__note {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 11.5px;
+  line-height: 1.45;
 }
 
 /* Search sits in the hero because finding a part by name is the way most
@@ -205,9 +216,9 @@
   box-sizing: border-box;
   border: 1px solid var(--field);
   border-radius: 15px;
-  padding: 10px 14px;
+  padding: 8px 13px;
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--ink);
   background: #ffffff;
   outline: none;
@@ -756,6 +767,7 @@
   .tut-hero__inner {
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
+    gap: 10px;
   }
 
   .tut-body {
@@ -797,7 +809,7 @@
   }
 
   .tut-hero__title {
-    font-size: 27px;
+    font-size: 18px;
   }
 
   .tut-grid {
@@ -817,4 +829,96 @@
   .tut-card:hover {
     transform: none;
   }
+}
+
+/* ATTRIBUTION AND SOURCED DATA
+   ============================
+   Added when the library stopped being hand-written and became an index of
+   other people's tutorials. Every rule here exists to keep two things
+   distinguishable on screen: what RobotShop's authors wrote, and what we
+   worked out from our own catalogue. */
+
+/* Thumbnails come from the Internet Archive and a few were never captured.
+   Matches `.pcard__media--empty` in catalog.css so a missing photo reads the
+   same way on both grids, and holds the 148px the image would have taken so
+   the row does not close up around it. */
+.tut-card__media--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 148px;
+  background: #fafafa;
+  color: #b8b8b8;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Whose tutorial this is. Quiet — it is a credit, not a selling point — but
+   never absent, and it sits above the price line so the last thing read on a
+   card is ours and the line before it is theirs. */
+.tut-card__byline {
+  margin: 0;
+  color: #8d96a4;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* No catalogue match. Deliberately not styled as a price: it is the absence of
+   one, and rendering "Rs 0" here would be a lie about a free kit. */
+.tut-card__parts--none {
+  color: #a2a9b4;
+  font-style: italic;
+  white-space: normal;
+}
+
+.tut-featured__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tut-featured__title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tut-featured__byline {
+  margin: 6px 0 0;
+  color: #8d96a4;
+  font-size: 0.78rem;
+}
+
+/* Which shop a BOM line resolved to. On its own line under the part name,
+   because the name is the thing being read and the seller is the footnote. */
+.tut-bom__seller {
+  display: block;
+  color: #a2a9b4;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+}
+
+.tut-bom__name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tut-bom__name a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Seller publishes no price. A dash holds the column without claiming zero. */
+.tut-bom__poa {
+  color: #a2a9b4;
+}
+
+/* "Read on RobotShop Community" is an anchor now, not a button, because it
+   leaves the site. It has to be told to look like the button it replaced. */
+a.tut-button {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
 }

@@ -269,8 +269,17 @@ def _kw_match(text: str, keyword: str) -> bool:
     because for them the risk runs the other way. Keywords ending in punctuation
     ("esp-", "mq-", "i2c") are prefixes by intent, so they stay leading-only.
     """
+    return _kw_pattern(keyword).search(text) is not None
+
+
+def _kw_pattern(keyword: str) -> "re.Pattern[str]":
+    """The one place the boundary rule above is expressed.
+
+    Both `_kw_match` and `_kw_count` need it, and two copies of a rule this
+    fiddly would drift the first time one of them was fixed.
+    """
     tail = r"(?![a-z0-9])" if len(keyword) <= 4 and keyword.isalpha() else ""
-    return re.search(rf"(?<![a-z0-9]){re.escape(keyword)}{tail}", text) is not None
+    return re.compile(rf"(?<![a-z0-9]){re.escape(keyword)}{tail}")
 
 
 def _any_kw(text: str, keywords) -> bool:

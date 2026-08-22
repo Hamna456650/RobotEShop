@@ -33,6 +33,8 @@ Outputs land in `scraper/data/`:
 | `robots.csv` | one flat row per robot, 48 columns — open in Excel |
 | `products.csv` | drop-in replacement for `mock-server/products.csv` |
 | `report.txt` | coverage report: what was captured, and what is missing |
+| `tutorials.json` | 89 tutorials — 87 from the RobotShop Community plus the curated publishers in `tutorials/external.py` — parts priced from the catalogue, written by `run_tutorials.py`, served at `GET /tutorials` |
+| `tutorials-report.txt` | the same coverage treatment for tutorials |
 
 ### Useful flags
 
@@ -188,6 +190,75 @@ goes through the same parsing and enrichment as everything else, and the real
 source URL is recovered from the page's own `<link rel=canonical>` so the row
 lands under `robotshop.com` and joins price comparison normally.
 
+### The same wall, and the other way round it: community.robotshop.com
+
+`community.robotshop.com` hosts RobotShop's tutorials — the content that closes
+the proposal's stated market gap. It is behind the **same** Cloudflare rule:
+`/robots.txt` answers 403, and so does every tutorial page and every thumbnail.
+Everything above applies, and `UndetectedAdapter` stays unwired here too.
+
+Saving 87 pages by hand is not a serious pipeline, so this one takes a different
+supported route: **we do not request anything from their servers at all.** The
+Internet Archive holds public snapshots of these pages, serves them over an open
+API with no challenge, and exists to be read by machines.
+
+```bash
+python run_tutorials.py            # CDX index -> archived pages -> data/tutorials.json
+```
+
+What that means in practice, and the line it does not cross:
+
+- We take metadata and a link — title, byline, dates, thumbnail — never the
+  article body as published content. The body is read only to work out which
+  *parts* the tutorial names, and is then discarded.
+- Every row records the snapshot it was read from in `archivedUrl`, so any
+  claim on our page can be traced to a fixed, citable copy.
+- Every tutorial on the site links back to the original, credits its author,
+  and is labelled with `sourceName`. The UI never presents one as ours.
+
+The value we add is the half they cannot write: their lesson says "connect a
+potentiometer to A0", and our catalogue knows a potentiometer is Rs 30 at
+instock.pk today. See `robotshop/tutorials/bom.py`.
+
+### Publishers who simply let us in
+
+Not every source needs routing around. `robotshop/tutorials/external.py` holds
+a short list of individual pages from publishers whose `robots.txt` allows the
+path we read and whose servers answer a normal request:
+
+| Publisher | Page | `robots.txt` (checked 2026-08-22) |
+|---|---|---|
+| The Construct | [C++ for Robotics](https://www.theconstruct.ai/robotigniteacademy_learnros/ros-courses-library/cpp-for-robotics/) | `Disallow: /wp-admin/` only |
+| RoboDK | [Free Robot Training with RoboDK](https://robodk.com/blog/free-robot-training-with-robodk/) | `/files/`, `/downloads/private/`, `/license/`, `/forum/…` |
+
+These are fetched live, one request each at the standing 1 req/s, so
+`archivedUrl` is null for them — there is no snapshot to cite, and claiming one
+would be a citation to nowhere. Everything else is the same deal as above:
+metadata and a link, the body read only for part matching, `sourceName` on the
+card, and a link back to whoever wrote it.
+
+It is a **seed list, not a crawl**, and that is the difference between the two
+sources. `wayback.py` indexes one site exhaustively because it is one library
+with one layout. Each line of `SOURCES` is instead a judgement that this
+particular page is worth a card. Adding a publisher is appending to that tuple;
+nothing else changes, because `external.parse` returns the same record shape
+`parse.parse` does and the enrichment runs on both alike.
+
+Two things the second source taught the shared rules, both now in
+`tests/test_tutorials.py`:
+
+- **A page's headline decides its category, not its word count.** A 900-word
+  article on offline robot programming that names a camera once was filed under
+  Sensors, because `_CATEGORY_RULES` lists Sensors above Controllers and
+  first-match read the whole page. Counting mentions instead re-filed 40 of the
+  87 archived tutorials and put "Basic structure of industrial robotic arm"
+  under Sensors, so that was not the fix; asking the publisher was.
+- **ROS 2's distribution codenames are ordinary English words.** Seeding the
+  framework keywords with `humble`, `iron`, `jazzy`, `foxy` and `galactic`
+  tagged a tutorial about *inductors* as ROS 2, off the phrase "iron core".
+  Same class as `ros` inside *gyroscope*, except a word boundary cannot save
+  you — the word really is there. Only a qualified codename counts.
+
 ---
 
 ## Why no LLM
@@ -341,8 +412,10 @@ not a finished answer.
 python -m pytest tests -q
 ```
 
-23 tests. Every case is a defect that actually shipped and was caught by
-inspecting real output — they are not hypothetical:
+94 tests, all offline. Every case is a defect that actually shipped and was
+caught by inspecting real output — they are not hypothetical.
+
+**Catalogue** (`test_enrich.py`, `test_adapters.py`):
 
 - `"ros"` matched inside **gy·ros·cope**, rating an MPU6050 gyroscope as
   "advanced, 18+"
@@ -356,6 +429,25 @@ inspecting real output — they are not hypothetical:
 The fix for the first three is a *leading* word boundary only; a trailing one
 would break legitimate stemming ("voice record" → "voice recording").
 
+**Tutorials** (`test_tutorials.py`) — same rule, newer pipeline:
+
+- A series table of contents sat *inside* the article as links to the other
+  lessons, so a potentiometer lesson appeared to need a servo, an IMU and an
+  IR distance sensor — lessons 5, 7 and 4 of the same series
+- `"resistor"` matched **photo·resistor**: the gyroscope bug again, arriving
+  from the product-name side, where tokens were still compared with `in`
+- An inductors lesson said "water wheel" six times as an analogy and was sold
+  a Rs 600 robot wheel. Frequency cannot catch a metaphor — the phrase is
+  disowned by context instead
+- A part named once in passing was treated as a part you build with
+- `"ultrasonic"` alone resolved to an *Ultrasonic Mist Maker* (a humidifier);
+  `"encoder"` alone to a *DTMF Encoder IC* (a telephone tone chip)
+- A percent-encoded zero-width space in one slug published the same tutorial
+  twice, making 88 rows out of 87 tutorials
+
+These are checked by re-introducing each bug and confirming the test fails —
+a test that passes against the broken code is not a regression test.
+
 ---
 
 ## Politeness and legality
@@ -364,6 +456,12 @@ would break legitimate stemming ("voice record" → "voice recording").
 - Identifies itself honestly in the User-Agent, with a contact address
 - Reads only public catalog pages — no login, no cart, no checkout
 - robo.pk's `robots.txt` explicitly permits crawling product and collection pages
+- Where a site refuses to publish a crawl policy at all, we do not guess at one
+  and we do not defeat its bot management. `robotshop.com` gets `--from-html`;
+  `community.robotshop.com` gets read from the Internet Archive instead, and
+  its servers are never touched. `UndetectedAdapter` is not wired in anywhere.
+- Tutorials are indexed, not republished: metadata and a link, the author
+  credited on every card, the snapshot cited in `archivedUrl`
 
 Raise `--delay` if a site starts returning 503s.
 
@@ -386,10 +484,22 @@ scraper/
       shopify.py            products.json + per-product deep crawl
       woocommerce.py        Store API
       generic.py            crawl4ai BFS deep crawl for everything else
+    tutorials/              second pipeline: lessons, not products
+      models.py             the canonical Tutorial schema
+      wayback.py            Internet Archive CDX index + snapshot URLs
+      parse.py              archived HTML -> a raw record (JSON-LD first)
+      external.py           curated publisher pages -> the same record shape
+      enrich.py             category, level, platform, format
+      bom.py                parts named in the text -> priced catalogue rows
+      export.py             tutorials.json + coverage report
     sql/
       schema_sqlite.sql
       schema_postgres.sql
+  run_tutorials.py          CLI entry point for the tutorial pipeline
   tests/test_enrich.py
+  tests/test_adapters.py
+  tests/test_tutorials.py
   data/                     outputs (gitignored)
   .cache/                   HTTP cache (gitignored)
+  .cache_tutorials/         Archive cache (gitignored)
 ```

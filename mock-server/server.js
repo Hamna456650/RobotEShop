@@ -13,7 +13,10 @@
  *   GET  /catalog       -> paginated browse: {total, page, products, facets}
  *                          ?category=&platform=&skill= repeat for multi-select
  *                          ?minPrice=&maxPrice=&inStock=&q=&sort=&page=
- *   GET  /health        -> {status:"ok"}
+ *   GET  /tutorials     -> {count, tutorials:[{...}]} — the whole library, no paging.
+ *                          Built by scraper/run_tutorials.py from archived
+ *                          RobotShop Community pages; empty until that is run.
+ *   GET  /health        -> {status:"ok", robots, tutorials}
  *
  * No dependencies: Node's built-in http/fs only.
  */
@@ -137,6 +140,45 @@ const ROBOTS = loadRobots();
 const CATEGORIES = [...new Set(ROBOTS.map((r) => r.category))];
 console.log(`Loaded ${ROBOTS.length} products from ${path.relative(process.cwd(), CATALOGUE_PATH)}`);
 console.log(`Categories: ${CATEGORIES.join(', ')}`);
+
+// ---------------------------------------------------------------- tutorials
+
+const TUTORIALS_PATH = path.join(__dirname, '..', 'scraper', 'data', 'tutorials.json');
+
+/**
+ * Tutorials are optional, unlike the catalogue.
+ *
+ * A missing `robots.json` is fatal — without it there is no product data and
+ * nothing to serve. A missing `tutorials.json` only means `run_tutorials.py`
+ * has not been run yet, so the server starts, says so once, and `/tutorials`
+ * answers with an empty list. The page then renders its own empty state naming
+ * the command to run, which is more useful than a server that refuses to boot.
+ *
+ * The file is already in the exact shape `ui/src/types/index.ts` declares, so
+ * there is no mapping layer here on purpose — see `tutorials/models.py`.
+ */
+function loadTutorials() {
+  try {
+    const rows = JSON.parse(fs.readFileSync(TUTORIALS_PATH, 'utf8'));
+    return Array.isArray(rows) ? rows : [];
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.warn(`Could not read ${TUTORIALS_PATH}: ${err.message}`);
+    }
+    return [];
+  }
+}
+
+const TUTORIAL_LIBRARY = loadTutorials();
+if (TUTORIAL_LIBRARY.length) {
+  const priced = TUTORIAL_LIBRARY.filter((t) => (t.parts || []).length).length;
+  console.log(
+    `Loaded ${TUTORIAL_LIBRARY.length} tutorials (${priced} with a priced parts list) ` +
+      `from ${path.relative(process.cwd(), TUTORIALS_PATH)}`
+  );
+} else {
+  console.log('No tutorials loaded — run `cd scraper && python run_tutorials.py`');
+}
 
 // ---------------------------------------------------------------- search
 
@@ -745,7 +787,20 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && url.startsWith('/health')) {
       res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', robots: ROBOTS.length }));
+      res.end(JSON.stringify({
+        status: 'ok',
+        robots: ROBOTS.length,
+        tutorials: TUTORIAL_LIBRARY.length,
+      }));
+      return;
+    }
+
+    if (req.method === 'GET' && url.startsWith('/tutorials')) {
+      // The whole library in one response. It is 87 rows, and the page filters
+      // and facets client-side, so paginating it would add a round trip and a
+      // query-string contract for no gain. Revisit if it reaches the thousands.
+      res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ tutorials: TUTORIAL_LIBRARY, count: TUTORIAL_LIBRARY.length }));
       return;
     }
 

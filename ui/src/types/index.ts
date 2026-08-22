@@ -132,39 +132,70 @@ export interface ErrorState {
 
 /* TUTORIALS
    =========
-   The editorial layer the scraper deliberately leaves empty
-   (`tutorial_videos`, `getting_started_guide` in scraper/robotshop/models.py).
-   Shapes below are what the page needs; the fields map one-to-one onto that
-   schema plus a bill of materials drawn from the catalogue. */
+   Served by `GET /tutorials`, built by scraper/run_tutorials.py from archived
+   RobotShop Community pages. These shapes mirror
+   scraper/robotshop/tutorials/models.py field for field — that file is the
+   authority, and there is no mapping layer between it and this.
 
-export type TutorialFormat = 'video' | 'guide' | 'wiring';
+   The split that matters: title, summary, author and dates are *someone
+   else's* facts and are shown with attribution and a link back. Category,
+   level, platforms and the parts list are ours, inferred by rules over the
+   text and priced against the scraped catalogue. */
+
+export type TutorialFormat = 'video' | 'guide' | 'wiring' | 'course';
 
 export type TutorialLevel = 'Beginner' | 'Intermediate' | 'Advanced';
 
-/** One line of a tutorial's bill of materials, priced from the catalogue. */
+/** One line of a tutorial's bill of materials, matched from the catalogue. */
 export interface TutorialPart {
-  /** Catalogue product name, shortened to fit a receipt line. */
+  /** The catalogue product this resolved to, under its seller's own title. */
   name: string;
   qty: number;
-  /** Unit price in PKR. */
-  price: number;
+  /**
+   * Unit price in PKR, or null where the seller publishes no price (brochure
+   * sites quote "Enquiry / POA"). Rendered as a dash, never as zero.
+   */
+  price: number | null;
+  /** Groups the same product across sellers — see `match_key` in the scraper. */
+  matchKey?: string | null;
+  sourceSite?: string | null;
+  /** The seller's product page, so a reader can actually go and buy it. */
+  productUrl?: string | null;
 }
 
 export interface Tutorial {
   id: string;
   title: string;
   summary: string;
-  /** Path under public/images — reuses a real catalogue photo. */
+  /**
+   * The archived thumbnail. Empty for the handful the Internet Archive never
+   * captured; the card renders a labelled tile rather than a broken image.
+   */
   image: string;
+  /** Where that image lives on the publisher's site. Attribution only. */
+  imageSourceUrl?: string | null;
+
+  /* -- attribution. Not optional: this is someone else's writing. */
+  sourceUrl: string;
+  sourceName: string;
+  author: string | null;
+  publishedAt: string | null;
+  updatedAt?: string | null;
+  /** The snapshot the text was read from, so a claim can be traced. */
+  archivedUrl?: string | null;
+  series?: string | null;
+  wordCount?: number | null;
+
+  /* -- inferred by rules over the tutorial text. */
   format: TutorialFormat;
   level: TutorialLevel;
   /** Mirrors the navbar taxonomy. */
   category: string;
   platforms: string[];
-  /** Runtime for a video. Null for anything written. */
+  /** Video runtime. Null throughout — the archived pages carry no duration. */
   runtimeSec: number | null;
   steps: number;
-  /** Editorially built and checked against real hardware. */
+  /** Editorially built and checked against real hardware. False while scraped. */
   verifiedBuild: boolean;
   parts: TutorialPart[];
 }

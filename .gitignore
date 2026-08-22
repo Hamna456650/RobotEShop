@@ -24,6 +24,10 @@ scraper/data/
 # HTTP response cache. ~184 MB of raw vendor HTML, purely a speed optimisation.
 scraper/.cache/
 
+# Internet Archive cache for the tutorial pipeline. Same deal: a speed
+# optimisation, rebuilt by `python run_tutorials.py`.
+scraper/.cache_tutorials/
+
 # --- local config -----------------------------------------------------------
 .env
 .env.local
