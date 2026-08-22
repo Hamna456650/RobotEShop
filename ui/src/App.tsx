@@ -14,6 +14,7 @@ import Navbar from "./components/Navbar";
 import Apparel from "./components/Apparel";
 import Chatbox from "./components/chatbox/chatbox";
 import Tutorials from "./components/tutorials/Tutorials";
+import Community from "./components/community/Community";
 import Catalog from "./components/catalog/Catalog";
 import ChatWidget from "./components/catalog/ChatWidget";
 
@@ -59,6 +60,10 @@ const App: React.FC = () => {
           {/* Tutorials takes the full width: a filter rail plus a three-up grid
               does not fit the 40vw pane, and browsing is the job on that screen. */}
           <Route path="/tutorials" element={<Tutorials />} />
+
+          {/* Community reviews. Full width for the same reason, and because a
+              review is prose — it needs a column, not a pane. */}
+          <Route path="/community" element={<Community />} />
 
           {/* The original chat-led screen, unchanged: the full-height panel
               beside the splash image that image upload renders into. */}

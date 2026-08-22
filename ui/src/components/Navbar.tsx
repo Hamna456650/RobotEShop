@@ -74,13 +74,22 @@ const Navbar: React.FC = () => {
           </NavLink>
         ))}
 
-        {/* Pushed to the far end: tutorials are a different kind of thing from
-            a product category, and the gap says so. */}
+        {/* Pushed to the far end: tutorials and community reviews are a
+            different kind of thing from a product category, and the gap says
+            so. They sit together because both are the editorial layer the
+            source sites do not carry. */}
         <NavLink
           to="/tutorials"
           className={({ isActive }) => "ml-auto " + linkClass(isActive)}
         >
           TUTORIALS
+        </NavLink>
+
+        <NavLink
+          to="/community"
+          className={({ isActive }) => linkClass(isActive)}
+        >
+          COMMUNITY
         </NavLink>
       </nav>
     </div>
