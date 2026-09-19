@@ -6,6 +6,7 @@
  */
 
 import { join } from "node:path";
+import type { ToolSet } from "ai";
 import { createFileCache, makeFindVideoTutorialsTool, type VideoCache } from "./findVideoTutorials";
 import { makeSearchCatalogTool, type TurnState } from "./searchCatalog";
 
@@ -20,7 +21,7 @@ function cache(): VideoCache {
   return videoCache;
 }
 
-export function makeTools(turn: TurnState) {
+export function makeTools(turn: TurnState): ToolSet {
   const search = makeSearchCatalogTool(turn, { fetch, baseUrl: CATALOG_API_URL });
   const key = process.env.SERPAPI_KEY;
   if (!key) return { search_catalog: search };

@@ -97,7 +97,8 @@ export const searchCatalogInput = z.object({
 
 export type SearchCatalogInput = z.infer<typeof searchCatalogInput>;
 
-export interface AppliedFilters {
+/** A type alias, not an interface, so it satisfies the SSE `filters` payload. */
+export type AppliedFilters = {
   q?: string;
   category?: string;
   platform?: string[];
@@ -106,7 +107,7 @@ export interface AppliedFilters {
   maxPrice?: number;
   inStock?: boolean;
   sort?: string;
-}
+};
 
 // ----------------------------------------------------------------- validate
 
