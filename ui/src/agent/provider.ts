@@ -10,8 +10,8 @@
  * not a deploy. Both defaults are each provider's cheap tool-capable tier.
  */
 
-import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
+import { createGoogle } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
 
 export type ProviderName = "gemini" | "openai";
@@ -36,12 +36,22 @@ export function parseProviderList(raw: string | undefined): ProviderName[] {
   return unique.length > 0 ? unique : [...DEFAULT_ORDER];
 }
 
+/**
+ * Keys are passed explicitly so the Gemini CLI's `GEMINI_API_KEY` works as
+ * well as the AI SDK's own `GOOGLE_GENERATIVE_AI_API_KEY`. An undefined key
+ * lets the provider fall back to its own env lookup and then fail the request,
+ * which the route treats as "try the next provider".
+ */
 export function modelFor(
   name: ProviderName,
   env: NodeJS.ProcessEnv = process.env
 ): LanguageModel {
-  if (name === "openai") return openai(env.LLM_MODEL_OPENAI || DEFAULT_MODEL.openai);
-  return google(env.LLM_MODEL_GEMINI || DEFAULT_MODEL.gemini);
+  if (name === "openai") {
+    return createOpenAI({ apiKey: env.OPENAI_API_KEY })(env.LLM_MODEL_OPENAI || DEFAULT_MODEL.openai);
+  }
+  return createGoogle({ apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY || env.GEMINI_API_KEY })(
+    env.LLM_MODEL_GEMINI || DEFAULT_MODEL.gemini
+  );
 }
 
 export type AttemptOutcome = "completed" | "failed-before-output";
