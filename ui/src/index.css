@@ -33,15 +33,17 @@ code {
     monospace;
 }
 
-/* Category strip. It is a fixed 57px, so the links scroll sideways rather than
+/* Navbar. It is a fixed 64px, so the links scroll sideways rather than
    wrapping — and the native horizontal bar is hidden, because at 15px tall it
-   would take a quarter of the strip. */
-.nav-strip {
+   would take a quarter of the bar. Geist is the preview's face; the rest of
+   the bar's values are Tailwind classes in Navbar.tsx. */
+.nav-bar {
+  font-family: Geist, "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.nav-strip::-webkit-scrollbar {
+.nav-bar::-webkit-scrollbar {
   display: none;
 }
 

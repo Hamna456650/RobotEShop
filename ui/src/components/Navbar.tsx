@@ -22,7 +22,6 @@
  */
 
 import React from "react";
-import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { config } from "../config/config";
@@ -31,71 +30,72 @@ import { config } from "../config/config";
 export const categorySlug = (category: string): string =>
   category.toLowerCase().replace(/&/g, "and").trim().replace(/\s+/g, "-");
 
+/** "MOTORS & ACTUATORS" -> "Motors & actuators". Config keeps the taxonomy
+ *  uppercase because the scraper does; the bar sets it in sentence case
+ *  (DESIGN.md section 8) at 14px, where all-caps would read as shouting. */
+const sentenceCase = (label: string): string =>
+  label.charAt(0) + label.slice(1).toLowerCase();
+
+/**
+ * One 64px bar, Vercel-style: wordmark, then the category links, then the
+ * editorial pages pushed to the far end. Separation from the page is a
+ * hairline, not a grey strip. See
+ * docs/superpowers/specs/2026-09-19-vercel-style-catalogue-preview-design.md.
+ */
 const Navbar: React.FC = () => {
   const { brand, categories } = config.ui;
   const pathname = usePathname();
 
   // The category links used to be dead `#`s. They now filter the catalogue,
   // which is what the query string in /catalog/[category] carries.
-  // `whitespace-nowrap` matters: the strip is a fixed 57px, so a label that
+  // `whitespace-nowrap` matters: the bar is a fixed height, so a label that
   // wraps to two lines breaks the bar rather than growing it.
   const linkClass = (isActive: boolean) =>
-    "shrink-0 whitespace-nowrap text-[15px] font-medium " +
-    (isActive ? "text-[#000] underline" : "text-[#666] hover:underline");
+    "shrink-0 whitespace-nowrap text-[14px] font-normal no-underline " +
+    (isActive ? "text-[#171717]" : "text-[#666666] hover:text-[#171717]");
 
   // react-router's NavLink did this for us; next/link has no active state.
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div>
-      {/* Main navigation bar */}
-      <div className="bg-[#FFFFFF] h-[48px] px-3 py-2 lg:px-5 text-white flex justify-between items-center">
-        {/* Left side - Menu and Brand */}
-        <div className="flex items-center shrink-0">
-          <MenuIcon sx={{ color: "#5E5E5E" }} fontSize="small" />
-          <Link
-            href="/"
-            className="text-[22px] ml-[20px] font-bold text-[#202020] no-underline"
-          >
-            {brand}
-          </Link>
-        </div>
+    <header className="nav-bar shrink-0 h-[64px] bg-[#fafafa] border-b border-[#ebebeb] px-4 lg:px-6 flex items-center gap-6 overflow-x-auto">
+      <Link
+        href="/"
+        className="shrink-0 flex items-center gap-2 mr-4 text-[14px] font-medium text-[#171717] no-underline"
+      >
+        {/* A plain black square: the wordmark's glyph, and the one element
+            allowed to be pure #000. */}
+        <span
+          aria-hidden="true"
+          className="inline-block w-[10px] h-[10px] bg-[#000000]"
+        />
+        {brand}
+      </Link>
 
-        {/* Right side - Welcome message */}
-        <div className="flex items-center gap-x-2">
-          <div className="flex items-center gap-2 p-3 rounded-full">
-            <p className="text-[14px] text-[#202020]">Welcome!</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Categories bar */}
-      <nav className="nav-strip bg-[#F2F2F2] mt-[1px] h-[57px] px-3 py-2 lg:px-8 flex items-center gap-5 lg:gap-8 overflow-x-auto">
+      <nav className="flex items-center gap-6 min-w-0" aria-label="Categories">
         {categories.map((category) => {
           const href = `/catalog/${categorySlug(category)}`;
           return (
             <Link key={category} href={href} className={linkClass(isActive(href))}>
-              {category}
+              {sentenceCase(category)}
             </Link>
           );
         })}
+      </nav>
 
-        {/* Pushed to the far end: tutorials and community reviews are a
-            different kind of thing from a product category, and the gap says
-            so. They sit together because both are the editorial layer the
-            source sites do not carry. */}
-        <Link
-          href="/tutorials"
-          className={"ml-auto " + linkClass(isActive("/tutorials"))}
-        >
-          TUTORIALS
+      {/* Pushed to the far end: tutorials and community reviews are a
+          different kind of thing from a product category, and the gap says
+          so. They sit together because both are the editorial layer the
+          source sites do not carry. */}
+      <nav className="ml-auto flex items-center gap-6" aria-label="Editorial">
+        <Link href="/tutorials" className={linkClass(isActive("/tutorials"))}>
+          Tutorials
         </Link>
-
         <Link href="/community" className={linkClass(isActive("/community"))}>
-          COMMUNITY
+          Community
         </Link>
       </nav>
-    </div>
+    </header>
   );
 };
 

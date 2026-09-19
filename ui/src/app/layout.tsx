@@ -46,6 +46,11 @@ export default function RootLayout({
           IBM Plex Mono is the first name in the mono stack DESIGN.md section 2
           prescribes for figures. Plex was drawn for engineering documentation,
           which is what a parts catalogue is.
+
+          Geist Sans and Geist Mono are the Vercel-style preview's faces (see
+          docs/superpowers/specs/2026-09-19-vercel-style-catalogue-preview-design.md).
+          They are under the SIL Open Font License. The catalogue and the
+          navbar use them; the other pages still set Lato and Plex.
         */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -54,13 +59,13 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=Geist:wght@400;500&family=Geist+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
       </head>
       <body>
         <Providers>
-          <div className="bg-[#FFFFFF] flex flex-col h-screen w-screen">
+          <div className="bg-[#fafafa] flex flex-col h-screen w-screen">
             {/* The page footer (Contact us / Guidelines / Privacy policy) was
                 removed so the full height below the navbar belongs to the
                 content. */}
