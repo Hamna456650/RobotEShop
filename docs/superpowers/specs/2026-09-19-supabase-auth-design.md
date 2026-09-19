@@ -62,10 +62,15 @@ end $$;
 
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Security definer, so nothing may call it except the trigger. Without this
+-- the security advisor flags it as executable by anon.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 ```
 
-No delete policy: deleting the auth user cascades. Applied as a named migration
-through the Supabase MCP so `list_migrations` records it.
+No delete policy: deleting the auth user cascades. Applied as two named
+migrations (`profiles`, `lock_handle_new_user`) through the Management API so
+`supabase_migrations.schema_migrations` records them.
 
 ## Project configuration (Management API)
 
