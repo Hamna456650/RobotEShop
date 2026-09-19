@@ -25,6 +25,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { config } from "../config/config";
+import { useAuth } from "../context/AuthContext";
 
 /** "MOTORS & ACTUATORS" -> "motors-and-actuators", which Catalog reverses. */
 export const categorySlug = (category: string): string =>
@@ -45,6 +46,11 @@ const sentenceCase = (label: string): string =>
 const Navbar: React.FC = () => {
   const { brand, categories } = config.ui;
   const pathname = usePathname();
+  const { status, displayName, signOut } = useAuth();
+
+  // Where sign-in should come back to. Never an auth page itself, or a
+  // successful sign-in would land on the form it just left.
+  const returnTo = pathname.startsWith("/auth/") ? "/" : pathname;
 
   // The category links used to be dead `#`s. They now filter the catalogue,
   // which is what the query string in /catalog/[category] carries.
@@ -95,6 +101,34 @@ const Navbar: React.FC = () => {
           Community
         </Link>
       </nav>
+
+      {/* Who is signed in. Renders nothing while the session is still being
+          read, so a signed-in visitor never sees "Sign in" flash for a frame.
+          The sign-in link carries the current path so it comes back here. A
+          hairline on the left separates the account from the editorial pages
+          the way the bar's bottom rule separates it from the page. */}
+      <div className="shrink-0 flex items-center gap-4 pl-6 border-l border-[#ebebeb] text-[14px] whitespace-nowrap">
+        {status === "signed-in" && (
+          <>
+            <span className="text-[#171717]">{displayName || "Signed in"}</span>
+            <button
+              type="button"
+              className="text-[#666666] hover:text-[#171717]"
+              onClick={() => void signOut()}
+            >
+              Sign out
+            </button>
+          </>
+        )}
+        {status === "signed-out" && (
+          <Link
+            href={`/auth/login?next=${encodeURIComponent(returnTo)}`}
+            className={linkClass(pathname.startsWith("/auth/"))}
+          >
+            Sign in
+          </Link>
+        )}
+      </div>
     </header>
   );
 };
