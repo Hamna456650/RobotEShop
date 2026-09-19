@@ -433,11 +433,11 @@
 
 /* Four photographs stacked in one full-bleed band; the second place the
    design system's no-photography rule is set aside, for the same reason as
-   the hero. The active tab's underline is the clock: a 6s fill whose
+   the hero. The active tab's underline is the clock: a 4s fill whose
    `animationend` advances the slide (Showcase.tsx). Everything that moves
    here obeys one play-state rule, so pausing the bar pauses the drift. */
 .landing .showcase {
-  --sc-hold: 6s;
+  --sc-hold: 4s;
   position: relative;
   height: min(80vh, 760px);
   min-height: 520px;
@@ -451,12 +451,12 @@
   opacity: 0;
   /* The outgoing slide drops out only after the incoming one has fully
      faded in on top of it, so there is never a dip to the dark canvas. */
-  transition: opacity 0s 0.9s;
+  transition: opacity 0s 0.6s;
 }
 .landing .showcase__slide.is-active {
   opacity: 1;
   z-index: 1;
-  transition: opacity 0.9s ease;
+  transition: opacity 0.6s ease;
 }
 .landing .showcase__photo {
   object-fit: cover;
@@ -539,8 +539,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.22);
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
   overflow: hidden;
 }
 .landing .showcase__bar {
@@ -558,13 +558,15 @@
 }
 
 /* One play-state rule. Running only while the band is on screen and not
-   under a mouse or holding keyboard focus (`:has(:focus-visible)` rather than
-   `:focus-within`, so a click on a tab does not freeze the tour). */
+   under a mouse on the tab row or holding keyboard focus. The hover pause is
+   the tabs, not the whole band: a reader parking the cursor on the
+   photograph must not stop the tour. `:has(:focus-visible)` rather than
+   `:focus-within`, so a click on a tab does not freeze it. */
 .landing .showcase.is-live .showcase__bar { animation-play-state: running; }
 .landing .showcase:not(.is-live) .showcase__photo { animation-play-state: paused; }
 @media (hover: hover) {
-  .landing .showcase:hover .showcase__bar,
-  .landing .showcase:hover .showcase__photo { animation-play-state: paused; }
+  .landing .showcase:has(.showcase__tabs:hover) .showcase__bar,
+  .landing .showcase:has(.showcase__tabs:hover) .showcase__photo { animation-play-state: paused; }
 }
 .landing .showcase:has(:focus-visible) .showcase__bar,
 .landing .showcase:has(:focus-visible) .showcase__photo { animation-play-state: paused; }
