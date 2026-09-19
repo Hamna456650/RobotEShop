@@ -173,7 +173,7 @@
 .tut-hero {
   background: var(--panel);
   border-bottom: 1px solid var(--hairline);
-  padding: 20px 0 18px;
+  padding: 14px 0 12px;
 }
 
 .tut-hero__inner {
@@ -195,7 +195,7 @@
 /* Wide on purpose. A 52ch measure is right for an article and wrong for a
    header — here it just buys extra lines nobody reads more slowly for. */
 .tut-hero__lead {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   max-width: 88ch;
   color: var(--body);
   font-size: 14px;
@@ -203,7 +203,7 @@
 }
 
 .tut-hero__coverage {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   color: var(--slate);
   font-size: 13px;
   line-height: 1.54;
@@ -263,7 +263,7 @@
   display: grid;
   grid-template-columns: 208px minmax(0, 1fr);
   gap: 28px;
-  padding: 24px 0 48px;
+  padding: 20px 0 48px;
   align-items: start;
 }
 

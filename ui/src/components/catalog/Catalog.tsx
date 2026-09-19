@@ -160,10 +160,6 @@ const Catalog: React.FC = () => {
   return (
     <div className="catalog">
       <div className="catalog__inner">
-        <nav className="catalog__breadcrumb">
-          <Link href="/">Home</Link> / <span>{heading}</span>
-        </nav>
-
         <div className="catalog__columns">
           {data ? (
             <FilterSidebar
@@ -180,6 +176,13 @@ const Catalog: React.FC = () => {
           )}
 
           <main>
+            {/* The breadcrumb is the title's eyebrow, so it lives in the
+                results column rather than spanning the page above the
+                sidebar, where it read as a sidebar heading. */}
+            <nav className="catalog__breadcrumb">
+              <Link href="/">Home</Link> / <span>{heading}</span>
+            </nav>
+
             <h1 className="catalog__title">{heading}</h1>
 
             <div className="catalog__resultbar">
