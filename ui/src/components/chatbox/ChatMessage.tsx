@@ -25,8 +25,8 @@ import SafeHTML from "./SafeHTML";
 import Loader from "./Loader";
 import { ChatMessageProps, MessageRole, ImageContent, ImageRowContent, RobotRowContent, RobotCard } from "../../types";
 import { isFashionMode } from "../../config/config";
-// Served from public/ so it needs no import typing. Drawn in the existing
-// brand green rather than a new colour.
+// Served from public/ so it needs no import typing. Drawn in ink on the
+// inverted surface — the same black the user's bubble uses.
 const advisorAvatar = "/advisor.svg";
 
 const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(

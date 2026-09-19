@@ -30,7 +30,7 @@ const Apparel: React.FC = () => {
   const displayImage = newRenderImage || getDefaultImage();
 
   return (
-    // Matches the vertical band of the fixed chat panel (top 106px, bottom 64px)
+    // Matches the vertical band of the fixed chat panel (top 64px, bottom 0)
     // so the two halves line up instead of leaving a gap under the image.
     <div className="product-pane">
       <img

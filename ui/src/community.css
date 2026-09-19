@@ -1,50 +1,56 @@
 /**
- * Community page.
+ * Community page — Vercel-style.
  *
- * Every colour, size and radius here comes from DESIGN.md, and the page shares
- * its shell, hero proportions and rail geometry with the tutorials page so the
- * two read as one product. Three rules shape it:
+ * Tokens are Vercel's, per
+ * docs/superpowers/specs/2026-09-19-vercel-style-catalogue-preview-design.md,
+ * and the page shares its shell, hero proportions and rail geometry with the
+ * tutorials page so the two read as one product. Three rules shape it:
  *
- *   - Green is for things you can act on. Amber is information on a data
- *     surface and never becomes clickable. One exception is annotated below,
- *     at the rating control, with the reason it is not really an exception.
- *   - Every number a reader compares — a price, a score, a vote count — is set
- *     in the mono stack.
+ *   - Achromatic. Canvas #fafafa, cards #ffffff with a stacked-ring hairline,
+ *     text on the #171717 / #4d4d4d / #666 scale. No green, no amber: a
+ *     rating is a row of filled ink segments, and the one primary action is
+ *     the filled black button.
+ *   - Geist Sans for reading. Geist Mono, small and uppercase, for every
+ *     label, count and figure.
  *   - Figures are ranked, not uniform. See "FIGURES" below.
  *
  * The tokens are redeclared rather than imported from tutorials.css: sharing
  * that file would make one page's styling load with the other's, and the two
- * are meant to be independently editable (CLAUDE.md).
+ * are meant to be independently editable (CLAUDE.md). The old token names are
+ * kept so the selectors below read the same; only their values changed.
  */
 
 .community {
-  --primary: #76b900;
-  --signal: #ff8a00;
+  --ink: #171717;
+  --slate: #666666;
+  --body: #4d4d4d;
+  --muted: #8f8f8f;
+  --strong: #171717;
+  --rule: #ebebeb;
+  --hairline: #ebebeb;
+  --field: #ebebeb;
+  --ash: #c9c9c9;
 
-  --ink: #101826;
-  --slate: #5a6678;
-  --muted: #666666;
-  --strong: #202020;
-  --rule: #d8dee7;
-  --hairline: #ececec;
-  --field: #d8d8d8;
+  --panel: #fafafa;
+  --media: #fafafa;
+  --surface: #ffffff;
+  --ring: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 2px #fafafa;
+  --radius: 6px;
+  --error: #171717;
 
-  --panel: #f9f9f9;
-  --media: #f7f8fa;
+  --sans: Geist, "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  /* Plex first: leading with `ui-monospace` resolves to Consolas on Windows
-     and quietly throws the chosen face away. */
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
-
-  /* 106px is the navbar plus the category strip, matching .tutorials. */
-  height: calc(100vh - 106px);
+  /* 64px is the navbar, matching .tutorials. */
+  height: calc(100vh - 64px);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--panel);
-  font-family: "NVIDIA Sans", sans-serif;
+  font-family: var(--sans);
+  font-feature-settings: "calt" 0, "rlig", "ss11";
   color: var(--ink);
   scrollbar-width: thin;
-  scrollbar-color: #cfcfcf transparent;
+  scrollbar-color: var(--ash) transparent;
 }
 
 .community::-webkit-scrollbar {
@@ -56,18 +62,33 @@
 }
 
 .community::-webkit-scrollbar-thumb {
-  background: #cfcfcf;
+  background: var(--ash);
   border-radius: 4px;
 }
 
 .community::-webkit-scrollbar-thumb:hover {
-  background: #b0b0b0;
+  background: var(--muted);
 }
 
 .community :focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--ink);
+  border-radius: var(--radius);
+}
+
+/* The mono "stamp": tiny, uppercase, wide-tracked. Every label on the page
+   that is not prose is one of these. */
+.com-rail__legend,
+.com-chip,
+.com-tagged__brand,
+.com-review__brand,
+.com-sort {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.071em;
+  text-transform: uppercase;
 }
 
 .com-visually-hidden {
@@ -86,8 +107,7 @@
    =======
    Three tiers, with the membership of each listed here rather than scattered
    through the file, so the ranking stays legible. Lining tabular figures
-   throughout, tracking pulled in — Plex Mono is drawn wide for code, and a
-   price is not code. */
+   throughout. */
 
 /* Tier 1 — the number a decision turns on. */
 .com-review__price,
@@ -95,9 +115,9 @@
   font-family: var(--mono);
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
   color: var(--ink);
 }
 
@@ -109,9 +129,9 @@
   font-family: var(--mono);
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
-  font-size: 0.79rem;
-  font-weight: 500;
-  letter-spacing: -0.012em;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
 /* Tier 3 — bookkeeping you should be able to ignore. */
@@ -123,27 +143,27 @@
   font-family: var(--mono);
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
-  font-size: 0.72rem;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0;
-  color: var(--slate);
+  color: var(--muted);
 }
 
 /* The currency is a mark on the amount, not part of it. Scoped to this page
    rather than sharing tutorials.css's `.fig__unit`, so neither file can
    redefine the other's out from under it. */
 .com-unit {
-  font-size: 0.62em;
-  font-weight: 500;
-  letter-spacing: 0.03em;
+  font-size: 0.7em;
+  font-weight: 400;
+  letter-spacing: 0.071em;
   color: var(--slate);
   margin-right: 0.36em;
 }
 
 .com-shell {
-  max-width: 1240px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 28px;
+  padding: 0 24px;
 }
 
 /* HERO
@@ -158,9 +178,9 @@
    paragraph each, and the button sat above the search rather than beside it —
    five separate decisions each costing a line, none of them wrong on its own. */
 .com-hero {
-  background: #ffffff;
+  background: var(--panel);
   border-bottom: 1px solid var(--hairline);
-  padding: 14px 0 13px;
+  padding: 20px 0 18px;
 }
 
 .com-hero__inner {
@@ -173,40 +193,41 @@
 .com-hero__title {
   margin: 0;
   color: var(--strong);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
 }
 
 /* Wide on purpose: a 54ch measure is right for an article and wrong for a
    header, where it only buys lines. */
 .com-hero__lead {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
   max-width: 88ch;
-  color: var(--slate);
-  font-size: 13px;
-  line-height: 1.5;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 1.43;
 }
 
 .com-hero__coverage {
   margin: 4px 0 0;
   color: var(--slate);
-  font-size: 12.5px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.54;
 }
 
 .com-hero__lead b,
 .com-hero__coverage b {
   color: var(--ink);
+  font-weight: 500;
 }
 
-/* The dead-on-arrival count is the one figure on the page worth an accent. It
-   is amber because it is information, and it sits inside a sentence rather
-   than in a tile, so it is never mistaken for something to click. */
+/* The dead-on-arrival count is the one figure on the page worth emphasis. The
+   system has no accent hue to give it, so it takes weight instead: ink at
+   medium, inside the sentence, never in a tile. */
 .com-hero__coverage b.com-hero__signal {
-  color: var(--signal);
-  font-weight: 600;
+  color: var(--ink);
+  font-weight: 500;
 }
 
 .com-hero__aside {
@@ -231,49 +252,58 @@
 .com-hero__note {
   margin: 0;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.45;
 }
 
 .com-search input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--field);
-  border-radius: 15px;
-  padding: 8px 13px;
+  border: 0;
+  box-shadow: 0 0 0 1px var(--field);
+  border-radius: var(--radius);
+  padding: 8px 12px;
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink);
-  background: #ffffff;
+  background: var(--surface);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .com-search input::placeholder {
-  color: #9aa4b2;
+  color: var(--muted);
 }
 
 .com-search input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+  box-shadow: 0 0 0 1px var(--ink);
 }
 
 /* BUTTONS
-   ======= */
+   =======
+   `.com-button` is the filled black primary — the strongest weight in the
+   system and the one thing on a page that reaches #171717 as a fill. Text
+   links are the lowest-weight interactive: charcoal, underlined, ink on
+   hover. */
 .com-button {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
   border: 0;
-  border-radius: 15px;
-  background: var(--primary);
+  border-radius: var(--radius);
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
   color: #ffffff;
   font: inherit;
   font-size: 14px;
-  font-weight: 500;
-  padding: 10px 20px;
+  font-weight: 400;
+  line-height: 1;
+  padding: 0 16px;
   cursor: pointer;
-  transition: filter 0.15s ease;
+  transition: background 0.12s ease;
   /* Also worn by a next/link when the action is "go sign in". */
-  display: inline-block;
   text-decoration: none;
   text-align: center;
 }
@@ -285,17 +315,17 @@
   /* `.com-button` pins itself to the start of a column; in a row beside a
      search field that would top-align it against the input. */
   align-self: auto;
-  padding: 8px 16px;
-  font-size: 13px;
+  height: 32px;
+  padding: 0 12px;
   white-space: nowrap;
 }
 
 .com-button:hover:not(:disabled) {
-  filter: brightness(0.93);
+  background: #000000;
 }
 
 .com-button:disabled {
-  opacity: 0.55;
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -305,18 +335,18 @@
   padding: 0;
   font: inherit;
   font-size: 13px;
-  color: var(--primary);
+  color: var(--body);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .com-linkbutton:hover {
-  color: #5f9600;
+  color: var(--ink);
 }
 
-/* Taking back your own review is not an encouraged action, so it does not get
-   the brand accent. */
+/* Taking back your own review is not an encouraged action, so it sits one
+   step lighter than the other links. */
 .com-linkbutton--quiet {
   color: var(--slate);
 }
@@ -325,17 +355,28 @@
   color: var(--ink);
 }
 
+/* Ghost outline: the secondary action, inverting to the primary on hover. */
 .com-clear {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
   border: 0;
-  background: none;
-  padding: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  box-shadow: 0 0 0 1px var(--field);
   font: inherit;
-  font-size: 13px;
-  color: var(--primary);
+  font-size: 14px;
+  color: var(--body);
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.com-clear:hover {
+  background: var(--ink);
+  color: #ffffff;
+  box-shadow: 0 0 0 1px var(--ink);
 }
 
 /* RATING
@@ -343,9 +384,10 @@
    Five segments rather than five stars. Everything else on a data surface in
    this app is a small rectangle with a hairline rule — chips, badges, the
    bill of materials — so the rating is drawn from that vocabulary instead of
-   being the one rounded, organic shape on the page. Amber, because a score is
-   information (DESIGN.md §1). 2px radius rather than the 4px chip radius: at
-   9px tall, 4px reads as a lozenge. */
+   being the one rounded, organic shape on the page. Filled ink for a lit
+   segment and hairline grey for an unlit one: a score is a value, and the
+   system draws values in tone, not hue. 2px radius rather than the 4px chip
+   radius: at 9px tall, 4px reads as a lozenge. */
 .com-rating {
   display: inline-flex;
   align-items: center;
@@ -362,21 +404,19 @@
   width: 15px;
   height: 9px;
   border-radius: 2px;
-  background: #e4e8ee;
+  background: var(--rule);
 }
 
 .com-rating__seg--on {
-  background: var(--signal);
+  background: var(--ink);
 }
 
 .com-rating__figure {
   color: var(--ink);
 }
 
-/* The same bar as a control.
-   The fill stays amber because it is the *value being set*, not the affordance
-   — the affordance is the green focus ring and the hover state below. That is
-   why this does not break the rule that amber never becomes clickable. */
+/* The same bar as a control. The fill is the *value being set*; the
+   affordance is the hover tone and the focus ring. */
 .com-ratinginput {
   display: flex;
   align-items: center;
@@ -394,18 +434,18 @@
   width: 38px;
   height: 16px;
   border-radius: 3px;
-  background: #e4e8ee;
+  background: var(--rule);
   cursor: pointer;
   transition: background-color 0.12s ease;
 }
 
 .com-ratinginput__seg:hover {
-  background: #cfd6df;
+  background: var(--ash);
 }
 
 .com-ratinginput__seg--on,
 .com-ratinginput__seg--on:hover {
-  background: var(--signal);
+  background: var(--ink);
 }
 
 /* The radio covers its whole segment and is made invisible with
@@ -429,13 +469,13 @@
 }
 
 .com-ratinginput__seg input:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
 }
 
 .com-ratinginput__meaning {
   font-size: 13px;
-  color: var(--slate);
+  color: var(--body);
 }
 
 /* BODY: rail + feed
@@ -476,25 +516,31 @@
 .com-rail__legend {
   padding: 0;
   margin: 0 0 8px;
-  font-family: var(--mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--slate);
+  color: var(--ink);
+}
+
+.com-rail__group + .com-rail__group {
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
 }
 
 .com-rail__option {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 13.5px;
-  color: var(--strong);
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 14px;
+  line-height: 1.43;
+  color: var(--body);
   cursor: pointer;
 }
 
+.com-rail__option:hover .com-rail__label {
+  color: var(--ink);
+}
+
 .com-rail__option input {
-  accent-color: var(--primary);
+  accent-color: var(--ink);
   width: 14px;
   height: 14px;
   margin: 0;
@@ -513,7 +559,7 @@
 
 .com-rail__option--off .com-rail__label,
 .com-rail__option--off .com-rail__count {
-  color: #a7aeb9;
+  color: var(--ash);
 }
 
 /* COMPOSER
@@ -524,11 +570,10 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  background: #ffffff;
-  border: 1px solid var(--rule);
-  border-radius: 10px;
+  background: var(--surface);
+  border-radius: var(--radius);
   padding: 22px 24px 24px;
-  box-shadow: 0 1px 3px rgba(16, 24, 38, 0.08);
+  box-shadow: var(--ring);
   margin-bottom: 8px;
 }
 
@@ -542,15 +587,16 @@
   margin: 0;
   color: var(--ink);
   font-size: 20px;
-  font-weight: 700;
-  line-height: 1.25;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
 }
 
 .com-form__lead {
   margin: 0;
   max-width: 62ch;
-  color: var(--slate);
-  font-size: 13.5px;
+  color: var(--body);
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -581,7 +627,7 @@
 
 .com-label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
 }
 
@@ -589,15 +635,18 @@
   margin: 0;
   font-size: 12px;
   line-height: 1.45;
-  color: var(--muted);
+  color: var(--slate);
 }
 
-/* Errors state what to do, not that something is invalid (DESIGN.md §8). */
+/* Errors state what to do, not that something is invalid (DESIGN.md §8). The
+   system has no red: an error is ink at medium weight, and the field it
+   belongs to takes an ink ring. */
 .com-error {
   margin: 0;
   font-size: 12px;
   line-height: 1.45;
-  color: #b3261e;
+  font-weight: 500;
+  color: var(--error);
 }
 
 .com-counter {
@@ -608,35 +657,35 @@
 .com-select {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--field);
-  border-radius: 10px;
-  padding: 10px 14px;
+  border: 0;
+  box-shadow: 0 0 0 1px var(--field);
+  border-radius: var(--radius);
+  padding: 8px 12px;
   font: inherit;
   font-size: 14px;
   color: var(--ink);
-  background: #ffffff;
+  background: var(--surface);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .com-input::placeholder {
-  color: #9aa4b2;
+  color: var(--muted);
 }
 
 .com-input:focus,
 .com-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+  box-shadow: 0 0 0 1px var(--ink);
 }
 
 .com-input--area {
   resize: vertical;
   min-height: 108px;
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .com-input--invalid {
-  border-color: #b3261e;
+  box-shadow: 0 0 0 1px var(--ink);
 }
 
 .com-select {
@@ -651,16 +700,17 @@
   position: relative;
 }
 
+/* A floating panel is the one place a soft shadow is earned: it has to read
+   as above the form, and a ring alone cannot say that. Kept faint. */
 .com-tagger__panel {
   position: absolute;
   z-index: 20;
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: #ffffff;
-  border: 1px solid var(--rule);
-  border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(16, 24, 38, 0.14);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
@@ -671,7 +721,7 @@
   max-height: 320px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #cfcfcf transparent;
+  scrollbar-color: var(--ash) transparent;
 }
 
 .com-tagger__list::-webkit-scrollbar {
@@ -679,7 +729,7 @@
 }
 
 .com-tagger__list::-webkit-scrollbar-thumb {
-  background: #cfcfcf;
+  background: var(--ash);
   border-radius: 4px;
 }
 
@@ -689,18 +739,23 @@
   align-items: center;
   gap: 10px;
   padding: 7px 8px;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.com-tagger__option--on {
-  background: rgba(118, 185, 0, 0.1);
+.com-tagger__option:hover {
+  background: var(--panel);
+}
+
+.com-tagger__option--on,
+.com-tagger__option--on:hover {
+  background: var(--hairline);
 }
 
 .com-tagger__thumb {
   width: 34px;
   height: 34px;
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--media);
   border: 1px solid var(--rule);
   overflow: hidden;
@@ -730,7 +785,7 @@
 }
 
 .com-tagger__meta {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--slate);
   white-space: nowrap;
   overflow: hidden;
@@ -747,7 +802,7 @@
   padding: 14px 16px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--slate);
+  color: var(--body);
 }
 
 /* The chosen part, shown the way it will read on the posted review. */
@@ -758,22 +813,22 @@
   gap: 12px;
   background: var(--media);
   border: 1px solid var(--rule);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 10px 14px;
 }
 
 .com-tagged__media {
   width: 52px;
   height: 52px;
-  border-radius: 8px;
-  background: #ffffff;
+  border-radius: 4px;
+  background: var(--surface);
   border: 1px solid var(--rule);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 9px;
-  color: #9aa4b2;
+  color: var(--ash);
   text-align: center;
 }
 
@@ -795,15 +850,12 @@
 }
 
 .com-tagged__brand {
-  font-size: 11px;
   color: var(--slate);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .com-tagged__name {
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--ink);
   line-height: 1.3;
   margin: 2px 0 3px;
@@ -811,10 +863,11 @@
 
 .com-tagged__sellers {
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: 11px;
   font-weight: 400;
-  letter-spacing: 0;
-  color: var(--slate);
+  letter-spacing: 0.071em;
+  text-transform: uppercase;
+  color: var(--muted);
   margin-left: 10px;
 }
 
@@ -825,7 +878,7 @@
 .com-bench {
   margin: 0;
   border: 1px solid var(--rule);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--media);
   padding: 14px 16px 16px;
   display: flex;
@@ -837,13 +890,13 @@
   padding: 0 6px;
   margin-left: -6px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
 }
 
 .com-bench__legend span {
   font-weight: 400;
-  color: var(--muted);
+  color: var(--slate);
   margin-left: 6px;
 }
 
@@ -861,25 +914,30 @@
 
 /* Segmented buttons rather than a row of radio dots: three mutually exclusive
    answers read faster as three things you pick between. */
+/* Ghost outline at rest; the chosen one inverts to filled ink, the way every
+   ghost button in the system does on hover. */
 .com-choice {
   position: relative;
-  border: 1px solid var(--field);
-  border-radius: 15px;
-  background: #ffffff;
-  padding: 7px 14px;
+  border: 0;
+  box-shadow: 0 0 0 1px var(--field);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 6px 12px;
   font-size: 13px;
-  color: var(--strong);
+  color: var(--body);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: background-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .com-choice:hover {
-  border-color: #b9c3d1;
+  box-shadow: 0 0 0 1px var(--ash);
 }
 
-.com-choice--on {
-  border-color: var(--primary);
-  background: rgba(118, 185, 0, 0.1);
+.com-choice--on,
+.com-choice--on:hover {
+  background: var(--ink);
+  color: #ffffff;
+  box-shadow: 0 0 0 1px var(--ink);
 }
 
 /* Invisible via `appearance: none`, not `opacity: 0` — see the note at
@@ -894,20 +952,20 @@
   -webkit-appearance: none;
   background: transparent;
   border: 0;
-  border-radius: 15px;
+  border-radius: var(--radius);
   cursor: pointer;
 }
 
 .com-choice input:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
 }
 
 /* TOOLBAR
    ======= */
 .com-toolbar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin: 4px 0 14px;
@@ -915,59 +973,60 @@
 
 .com-toolbar__count {
   margin: 0;
-  font-size: 13.5px;
-  color: var(--slate);
+  font-size: 14px;
+  color: var(--body);
 }
 
 .com-toolbar__count b {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 400;
   margin-right: 1px;
 }
 
+/* The label is a mono stamp (sized by the eyebrow group at the top); the
+   select is bare, and shows its box on hover. */
 .com-sort {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
-  font-size: 13px;
   color: var(--slate);
 }
 
 .com-sort select {
-  border: 1px solid var(--field);
-  border-radius: 8px;
-  background: #ffffff;
-  padding: 6px 10px;
-  font: inherit;
-  font-size: 13px;
-  color: var(--strong);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  padding: 4px 6px;
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
   cursor: pointer;
 }
 
-.com-sort select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+.com-sort select:hover {
+  background: var(--hairline);
 }
 
 /* THE REVIEW
    ==========
-   Same card family as .tut-card and .robot-card — 10px radius, hairline rule,
-   mono figures. The strip across the top is what makes it this app's review
-   and not a generic one: the part, its photo, what it cost and how many
-   sellers carry it, so the opinion is anchored to something orderable. */
+   Same card family as .tut-card and .pcard — 6px radius, stacked-ring
+   hairline, mono figures. The strip across the top is what makes it this
+   app's review and not a generic one: the part, its photo, what it cost and
+   how many sellers carry it, so the opinion is anchored to something
+   orderable. */
 .com-feed {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .com-review {
-  background: #ffffff;
-  border: 1px solid var(--rule);
-  border-radius: 10px;
+  background: var(--surface);
+  border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(16, 24, 38, 0.08);
+  box-shadow: var(--ring);
 }
 
 .com-review__product {
@@ -983,15 +1042,15 @@
 .com-review__thumb {
   width: 44px;
   height: 44px;
-  border-radius: 6px;
-  background: #ffffff;
+  border-radius: 4px;
+  background: var(--surface);
   border: 1px solid var(--rule);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 8px;
-  color: #9aa4b2;
+  color: var(--ash);
   text-align: center;
 }
 
@@ -1010,15 +1069,12 @@
 }
 
 .com-review__brand {
-  font-size: 10.5px;
   color: var(--slate);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .com-review__productname {
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--ink);
   line-height: 1.3;
   text-decoration: none;
@@ -1065,9 +1121,10 @@
   flex: 1 1 18ch;
   min-width: 0;
   color: var(--ink);
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 500;
   line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
 /* Capped for reading, while the card itself stays full width so the price and
@@ -1076,9 +1133,9 @@
 .com-review__text {
   margin: 0;
   max-width: 74ch;
-  color: var(--slate);
+  color: var(--body);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1094,24 +1151,19 @@
 
 .com-chip {
   margin: 0;
-  padding: 2px 6px;
+  padding: 1px 6px;
   border: 1px solid var(--rule);
   border-radius: 4px;
   background: var(--media);
   color: var(--slate);
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
-/* Filled ink rather than a colour. The accent budget is three (DESIGN.md §1),
-   all three are spoken for, and the same treatment already carries the video
-   runtime on a tutorial thumbnail — weight without a fourth hue. */
+/* Filled ink: the inverted surface, used sparingly as punctuation. The same
+   treatment carries the video runtime on a tutorial thumbnail. */
 .com-chip--dead {
-  border-color: transparent;
-  background: rgba(16, 24, 38, 0.86);
+  border-color: var(--ink);
+  background: var(--ink);
   color: #ffffff;
 }
 
@@ -1128,13 +1180,13 @@
 
 .com-review__by {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--slate);
 }
 
 .com-review__by b {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .com-review__actions {
@@ -1143,37 +1195,44 @@
   gap: 16px;
 }
 
-/* Voting is an action, so it takes the brand accent — outlined rather than
-   filled, because it is not the primary thing to do on this page. */
+/* Voting is a ghost outline button — an action, but not the primary one on
+   this page. Once you have voted it stays inverted, so the state reads. */
 .com-helpful {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--field);
-  border-radius: 15px;
-  background: #ffffff;
-  padding: 5px 12px;
+  height: 28px;
+  border: 0;
+  box-shadow: 0 0 0 1px var(--field);
+  border-radius: var(--radius);
+  background: transparent;
+  padding: 0 10px;
   font: inherit;
-  font-size: 12.5px;
-  color: var(--strong);
+  font-size: 13px;
+  color: var(--body);
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .com-helpful:hover:not(:disabled) {
-  border-color: var(--primary);
-  color: #5f9600;
+  background: var(--ink);
+  color: #ffffff;
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
+.com-helpful:hover:not(:disabled) .com-helpful__count {
+  color: inherit;
 }
 
 .com-helpful--on {
-  border-color: rgba(118, 185, 0, 0.35);
-  background: rgba(118, 185, 0, 0.1);
-  color: #4e7a00;
+  background: var(--ink);
+  color: #ffffff;
+  box-shadow: 0 0 0 1px var(--ink);
   cursor: default;
 }
 
 .com-helpful--on .com-helpful__count {
-  color: #4e7a00;
+  color: inherit;
 }
 
 /* THREAD
@@ -1220,14 +1279,14 @@
 
 .com-reply__by b {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .com-reply__text {
   margin: 0;
   color: var(--body);
-  font-size: 13.5px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.54;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1278,14 +1337,14 @@
 }
 
 /* The way into the thread and the size of the thread are one control. Quiet by
-   default — it is a door, not a call to action — and it takes the brand accent
-   only while the thread it opened is open. */
+   default — it is a door, not a call to action — and it steps up to ink only
+   while the thread it opened is open. */
 .com-threadtoggle {
   border: 0;
   background: none;
   padding: 0;
   font: inherit;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--slate);
   cursor: pointer;
   text-decoration: underline;
@@ -1299,11 +1358,12 @@
 
 .com-threadtoggle--on,
 .com-threadtoggle--on:hover {
-  color: #5f9600;
+  color: var(--ink);
+  font-weight: 500;
 }
 
-/* The count is a tier-3 figure and carries slate of its own; while the thread
-   is open it follows the label rather than staying grey next to green text. */
+/* The count is a tier-3 figure and carries its own grey; while the thread is
+   open it follows the label. */
 .com-threadtoggle--on .com-threadtoggle__count {
   color: inherit;
 }
@@ -1314,9 +1374,9 @@
    is a page nobody has written to yet, the other is a filter combination, and
    they need different answers (DESIGN.md §8). */
 .com-empty {
-  border: 1px solid var(--rule);
-  border-radius: 10px;
-  background: #ffffff;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--ring);
   padding: 32px 28px;
   max-width: 58ch;
 }
@@ -1324,15 +1384,16 @@
 .com-empty h3 {
   margin: 0 0 8px;
   color: var(--ink);
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 .com-empty p {
   margin: 0 0 14px;
-  color: var(--slate);
+  color: var(--body);
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .com-empty__actions {

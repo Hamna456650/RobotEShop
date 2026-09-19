@@ -88,13 +88,16 @@
     format("woff2");
 }
 
+/* Vercel-style preview: `--primary` is ink now, so anything upstream that still
+   reads it turns achromatic rather than green. See
+   docs/superpowers/specs/2026-09-19-vercel-style-catalogue-preview-design.md. */
 *,
 html {
   --primaryGradient: linear-gradient(0deg, #000000 0%, #000000 100%);
   --secondaryGradient: linear-gradient(0deg, #000000 0%, #000000 100%);
   --primaryBoxShadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
   --secondaryBoxShadow: 0px -10px 15px rgba(0, 0, 0, 0.1);
-  --primary: #76b900;
+  --primary: #171717;
   --secondary: #000000;
 }
 
@@ -106,15 +109,16 @@ html {
   flex-direction: column;
   justify-content: flex-start;
 /* border:solid blue; */
-  top: 106px;
+  top: 64px;                       /* below the single 64px navbar */
   /* Was 64px to clear the page footer, which has since been removed. */
   bottom: 0;
   right: 0px;
   z-index: 9999999;
-  font-family: "NVIDIA sans", sans-serif;
+  font-family: Geist, "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "calt" 0, "rlig", "ss11";
   font-weight: 400;
   /* border:solid red; */
-  
+
   height: auto;
   width: 60vw;
 }
@@ -217,31 +221,33 @@ html {
   flex: 0 0 auto;
 }
 
-.chatbox__support {  
-  background: #f9f9f9;
+/* The panel ground is the paper canvas; a hairline on the left edge separates
+   it from the page instead of a shadow. */
+.chatbox__support {
+  background: #fafafa;
   /* height: 700px;
   width: 700px; */
-  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: -1px 0 0 #ebebeb;
   flex-grow: 1;
   width: 100%;
 }
 
 /* HEADER */
 .chatbox__header {
-  background: #ffffff;
+  background: #fafafa;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 0 20px;
   /* border-top-left-radius: 20px;
   border-top-right-radius: 20px; */
-  background-color: #ffffff;
+  background-color: #fafafa;
   /* Fixed chrome is kept compact so the message area, which takes the
      remaining space, stays usable on laptop-height screens. */
-  height: 52px;
+  height: 48px;
   flex: 0 0 auto;
-  border-bottom: 1px solid #ececec;
+  border-bottom: 1px solid #ebebeb;
 }
 
 .chatbox__image--header {
@@ -249,10 +255,14 @@ html {
   margin-top: 10px;
 }
 
+/* The panel name is a mono stamp: it is a label on the chrome, not a title. */
 .chatbox__heading--header {
-  color: #292929;
-  font-weight: 500;
-  font-size: 20px;
+  color: #171717;
+  font-family: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.071em;
+  text-transform: uppercase;
 }
 
 .chatbox__heading--x {
@@ -317,32 +327,34 @@ html {
 
 }
 
+/* Bubbles are cards: 6px radius, stacked-ring hairline, no shadow. The corner
+   nearest the speaker is squared to 2px, so the asymmetry still says who is
+   talking without a 20px pill. The assistant is a white card on the canvas. */
 .messages__item--assistant,
 .messages__item--typing {
   margin-top: 10px;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
+  border-radius: 6px;
+  border-bottom-left-radius: 2px;
   background: #ffffff;
-  color: #121212;
+  color: #171717;
   max-width: 70%;
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
   padding: 12px 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 2px #fafafa;
 }
 
 .messages__item--assistant--p {
   margin-top: 10px;
   margin-bottom: 2px;
-  color: #121212;
+  color: #171717;
   border: none;
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .messages__item--assistant--ol {
-  color: #121212;
+  color: #171717;
   list-style-type: decimal;
   border: none;
   font-size: 1rem;
@@ -360,14 +372,14 @@ html {
 
 .messages__item--assistant--ol li::before {
   /* content: counter(count-me) ". "; */
-  color: #121212;
+  color: #171717;
   font-size: 1rem;
   line-height: 1.6;
 }
 
 .messages__item--assistant--ol li p {
   position: relative;
-  color: #121212;
+  color: #171717;
   margin: 0px;
   display: inline;
   font-size: 1rem;
@@ -377,14 +389,14 @@ html {
 .messages__item--assistant--ol li p a {
   text-decoration: underline;
   font-weight: bold;
-  color: #121212;
+  color: #171717;
   font-size: 1rem;
   line-height: 1.6;
 }
 
 .messages__item--assistant--ul {
   background: white;
-  color: #121212;
+  color: #171717;
   border: none;
   font-size: 1rem;
   padding: 8px 12px;
@@ -393,7 +405,7 @@ html {
 
 .messages__item--assistant--ul li {
   background: white;
-  color: #121212;
+  color: #171717;
   border: none;
   margin-bottom: 15px;
   margin-left: 25px;
@@ -418,7 +430,7 @@ html {
 
 .messages__item--assistant--ul li p {
   position: relative;
-  color: #121212;
+  color: #171717;
   margin: 0px;
   display: inline;
   font-size: 1rem;
@@ -427,19 +439,22 @@ html {
 
 .messages__item--assistant--li {
   background: white;
-  color: #121212;
+  color: #171717;
   border: none;
   font-size: 1rem;
   line-height: 1.6;
 }
 
+/* The user is the inverted card — the system's one dark surface, used as
+   punctuation. It flips the value scale so your own words stand apart from
+   the assistant's without a colour. */
 .messages__item--user {
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  border-bottom-left-radius: 20px;
-  font-size: 1rem;
-  line-height: 1.6;
-  background-color: rgba(118, 185, 0, 0.3);
+  border-radius: 6px;
+  border-bottom-right-radius: 2px;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: #171717;
+  color: #ffffff;
   padding: 12px 16px;
 }
 
@@ -517,18 +532,17 @@ html {
 
 /* ROBOT RESULT CARDS
    ===================
-   Datasheet direction from docs/UI-CUSTOMISATION-IDEAS.md: ink navy text,
-   monospaced figures for anything numeric, amber as the accent, and green
-   reserved as a semantic colour for verified sellers only. */
+   The same card family as .pcard in catalog.css: ink text, mono figures and
+   stamps, a stacked-ring hairline, no colour. Terminal Green (#297a3a) is the
+   one chromatic exception the system allows, and it is spent on exactly one
+   thing — the ✓ of a verified seller. */
 .robot-row {
-  --ink: #101826;
-  --slate: #5a6678;
-  --rule: #d8dee7;
-  --signal: #ff8a00;
-  --verified: #1b9e5a;
-  /* Plex first: with `ui-monospace` ahead of it this resolved to Consolas on
-     Windows, so the card figures were set in the system code-editor face. */
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --ink: #171717;
+  --slate: #666666;
+  --muted: #8f8f8f;
+  --rule: #ebebeb;
+  --verified: #297a3a;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   /* One scrolling line rather than a wrapping grid: a result set of any size
      then costs exactly one card height, leaving the rest of the panel to the
@@ -566,15 +580,14 @@ html {
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border: 1px solid var(--rule);
-  border-radius: 10px;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(16, 24, 38, 0.08);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 2px #fafafa;
 }
 
 .robot-card__media {
   position: relative;
-  background: #f7f8fa;
+  background: #ffffff;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -587,45 +600,48 @@ html {
   object-fit: cover;
 }
 
+/* A mono stamp in a hairline pill, the ✓ in Terminal Green. */
 .robot-card__verified {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: var(--verified);
-  color: #ffffff;
+  background: #fafafa;
+  box-shadow: 0 0 0 1px var(--rule);
+  color: var(--verified);
   font-family: var(--mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.04em;
-  padding: 3px 7px;
-  border-radius: 4px;
+  font-size: 11px;
+  letter-spacing: 0.071em;
+  text-transform: uppercase;
+  padding: 1px 8px;
+  border-radius: 9999px;
 }
 
 .robot-card__body {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding: 8px 10px 10px;
+  padding: 10px 12px 12px;
 }
 
 .robot-card__name {
   margin: 0;
   color: var(--ink);
-  font-size: 0.82rem;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
   /* Two lines keeps every card in a row the same height. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 2.1em;
+  min-height: 2.8em;
 }
 
 .robot-card__meta {
   margin: 0;
   color: var(--slate);
-  font-size: 0.7rem;
-  line-height: 1.3;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .robot-card__chips {
@@ -638,24 +654,26 @@ html {
   text-align: left;
 }
 
+/* Mono stamps in hairline boxes. The skill chip used to be amber; now it is
+   the one chip drawn in ink, which is all the emphasis the system has. */
 .robot-card__chip {
   margin: 0;
-  padding: 2px 6px;
+  padding: 1px 6px;
   border: 1px solid var(--rule);
   border-radius: 4px;
-  background: #f7f8fa;
+  background: #fafafa;
   color: var(--slate);
   font-family: var(--mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.03em;
+  font-size: 11px;
+  letter-spacing: 0.071em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .robot-card__chip--skill {
-  border-color: rgba(255, 138, 0, 0.35);
-  background: rgba(255, 138, 0, 0.1);
-  color: #9a5200;
+  border-color: var(--ink);
+  background: #ffffff;
+  color: var(--ink);
 }
 
 .robot-card__price {
@@ -664,28 +682,34 @@ html {
   justify-content: space-between;
   gap: 6px;
   margin-top: 1px;
-  padding-top: 6px;
+  padding-top: 8px;
   border-top: 1px solid var(--rule);
 }
 
 .robot-card__amount {
   color: var(--ink);
   font-family: var(--mono);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 .robot-card__offers {
-  color: var(--slate);
-  font-size: 0.65rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.071em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
 .robot-card__tutorials {
   margin: 0;
-  color: var(--signal);
-  font-size: 0.68rem;
-  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.071em;
+  text-transform: uppercase;
 }
 
 /* FOOTER */
@@ -696,35 +720,42 @@ html {
   justify-content: space-between;
   gap: 10px;
   padding: 12px 20px;
-  background: #ffffff;
-  border-bottom-right-radius: 10px;
-  border-bottom-left-radius: 10px;
+  background: #fafafa;
+  border-bottom-right-radius: 6px;
+  border-bottom-left-radius: 6px;
   /* The 20px margin here was dead space between the messages and the input. */
   margin-top: 0;
   flex: 0 0 auto;
-  border-top: 1px solid #ececec;
+  border-top: 1px solid #ebebeb;
 }
 
 .chatbox__footer input {
   flex: 1 1 auto;
   width: auto;
   min-width: 0;
-  border: 1px solid #d8d8d8;
-  padding: 10px 14px;
-  border-radius: 15px;
+  border: 0;
+  box-shadow: 0 0 0 1px #ebebeb;
+  background: #ffffff;
+  color: #171717;
+  padding: 8px 12px;
+  border-radius: 6px;
   text-align: left;
-  font-size: 1rem;
+  font: inherit;
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease;
+}
+
+.chatbox__footer input::placeholder {
+  color: #8f8f8f;
 }
 
 .chatbox__footer input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+  box-shadow: 0 0 0 1px #171717;
 }
 
 .chatbox__send--footer {
-  color: #292929;
+  color: #171717;
 }
 
 .chatbox__button button,

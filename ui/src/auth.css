@@ -1,11 +1,13 @@
 /**
- * Auth pages — sign in, sign up, password reset.
+ * Auth pages — sign in, sign up, password reset. Vercel-style.
  *
- * One centred card on the panel ground. Tokens are redeclared here rather than
+ * One centred card on the paper canvas. Tokens are redeclared here rather than
  * imported from community.css for the same reason that file does not import
  * tutorials.css: each page's styling loads and edits on its own (CLAUDE.md).
- * Values are DESIGN.md's: field border #D8D8D8, green focus ring, 10px inputs,
- * 15px pill button, ink/slate/muted text.
+ * Values are Vercel's, per
+ * docs/superpowers/specs/2026-09-19-vercel-style-catalogue-preview-design.md:
+ * #fafafa canvas, #ffffff card with a stacked-ring hairline, 6px radius,
+ * Geist Sans, one filled black button, no colour.
  *
  * No header band. The card is the whole page, so it sits in the vertical
  * middle of the space under the navbar — a form at the top-left of a blank
@@ -15,14 +17,17 @@
  */
 
 .auth {
-  --primary: #76b900;
-  --ink: #101826;
-  --slate: #5a6678;
-  --muted: #666666;
-  --rule: #d8dee7;
-  --field: #d8d8d8;
-  --panel: #f9f9f9;
-  --error: #b3261e;
+  --ink: #171717;
+  --body: #4d4d4d;
+  --slate: #666666;
+  --muted: #8f8f8f;
+  --rule: #ebebeb;
+  --field: #ebebeb;
+  --panel: #fafafa;
+  --surface: #ffffff;
+  --ring: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 2px #fafafa;
+  --radius: 6px;
+  --sans: Geist, "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   flex: 1 1 auto;
   min-height: 0;
@@ -33,17 +38,17 @@
   padding: 24px 16px;
   box-sizing: border-box;
   background: var(--panel);
-  font-family: "NVIDIA Sans", sans-serif;
+  font-family: var(--sans);
+  font-feature-settings: "calt" 0, "rlig", "ss11";
   color: var(--ink);
 }
 
 .auth-card {
   width: 100%;
   max-width: 400px;
-  background: #ffffff;
-  border: 1px solid var(--rule);
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(16, 24, 38, 0.08);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--ring);
   padding: 28px 28px 24px;
   box-sizing: border-box;
   display: flex;
@@ -59,15 +64,16 @@
 
 .auth-card__title {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
 }
 
 .auth-card__lead {
   margin: 0;
-  color: var(--slate);
-  font-size: 13.5px;
+  color: var(--body);
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -92,94 +98,113 @@
 
 .auth-label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
 }
 
 .auth-input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--field);
-  border-radius: 10px;
-  padding: 10px 14px;
+  border: 0;
+  box-shadow: 0 0 0 1px var(--field);
+  border-radius: var(--radius);
+  padding: 8px 12px;
   font: inherit;
   font-size: 14px;
   color: var(--ink);
-  background: #ffffff;
+  background: var(--surface);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .auth-input::placeholder {
-  color: #9aa4b2;
+  color: var(--muted);
 }
 
 .auth-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+  box-shadow: 0 0 0 1px var(--ink);
 }
 
 .auth-input--invalid {
-  border-color: var(--error);
+  box-shadow: 0 0 0 1px var(--ink);
 }
 
-/* Errors say what to do, not that something is invalid (DESIGN.md §8). */
+/* Errors say what to do, not that something is invalid (DESIGN.md §8). The
+   system has no red: an error is ink at medium weight. */
 .auth-error {
   margin: 0;
   font-size: 12.5px;
   line-height: 1.45;
-  color: var(--error);
-}
-
-/* A result of the last action — "check your inbox" — not an error. */
-.auth-notice {
-  margin: 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(118, 185, 0, 0.1);
-  font-size: 13.5px;
-  line-height: 1.5;
+  font-weight: 500;
   color: var(--ink);
 }
 
+/* A result of the last action — "check your inbox" — not an error. A hairline
+   panel on the canvas tone; the ✓ is the terminal's confirmation mark. */
+.auth-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: 0 0 0 1px var(--rule);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+.auth-notice::before {
+  content: "✓ ";
+  color: #297a3a;
+  font-family: "Geist Mono", ui-monospace, monospace;
+}
+
+/* The filled black primary. The one thing on the page that reaches #171717
+   as a fill. */
 .auth-button {
+  height: 36px;
   border: 0;
-  border-radius: 15px;
-  background: var(--primary);
+  border-radius: var(--radius);
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
   color: #ffffff;
   font: inherit;
   font-size: 14px;
-  font-weight: 500;
-  padding: 10px 20px;
+  font-weight: 400;
+  padding: 0 16px;
   cursor: pointer;
-  transition: filter 0.15s ease;
+  transition: background 0.12s ease;
   margin-top: 4px;
 }
 
 .auth-button:hover:not(:disabled) {
-  filter: brightness(0.93);
+  background: #000000;
 }
 
 .auth-button:disabled {
-  opacity: 0.55;
+  opacity: 0.4;
   cursor: default;
+}
+
+.auth-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
 }
 
 .auth-link {
   font-size: 13px;
-  color: var(--primary);
+  color: var(--body);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .auth-link:hover {
-  color: #5f9600;
+  color: var(--ink);
 }
 
 .auth-foot {
   margin: 0;
   padding-top: 14px;
-  border-top: 1px solid #ececec;
+  border-top: 1px solid var(--rule);
   font-size: 13px;
   color: var(--slate);
 }

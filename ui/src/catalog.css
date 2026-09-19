@@ -559,7 +559,7 @@
 }
 
 /*
- * Chatbox is `position: fixed; top: 106px; right: 0; width: 60vw` — sized to own
+ * Chatbox is `position: fixed; top: 64px; right: 0; width: 60vw` — sized to own
  * the right-hand half of the original screen. These overrides re-frame that same
  * component as a corner panel without touching chatbox.css, which the assistant
  * screen at /assistant still depends on.

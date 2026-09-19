@@ -16,18 +16,24 @@ pagination, chat launcher — so if the style holds there it holds anywhere.
 
 ## Scope
 
-Three files change. No component logic, no server, no DESIGN.md.
+The catalogue came first, as the test. Once it held, the same system went on
+to every other page — the whole app is the preview now. No component logic,
+no server, no DESIGN.md.
 
 | File | Change |
 |---|---|
-| `ui/src/app/layout.tsx` | Add Geist Sans and Geist Mono to the Google Fonts link. Lato and Plex stay loaded for the other pages. |
-| `ui/src/components/Navbar.tsx` | One 64px bar on `#fafafa` with a hairline bottom border. Wordmark, category links, Tutorials/Community pushed right. Categories render in sentence case. No hamburger icon, no grey strip. |
+| `ui/src/app/layout.tsx` | Add Geist Sans and Geist Mono to the Google Fonts link. Lato and Plex stay loaded but nothing reads them any more. |
+| `ui/src/components/Navbar.tsx` | One 64px bar on `#fafafa` with a hairline bottom border. Wordmark, category links, Tutorials/Community pushed right, account cluster at the far end. Categories render in sentence case. No hamburger icon, no grey strip. |
 | `ui/src/catalog.css` | Every token, type and spacing value moves to the Vercel system. The `[ref]` comments (thepihut measurements) go, because the reference has changed. |
+| `ui/src/tutorials.css`, `ui/src/community.css`, `ui/src/auth.css` | Token blocks swapped to Vercel values under the existing names, so the selectors read the same. Radii to 6px, shadows to the stacked ring, green and amber to ink, inputs and buttons to the ghost/filled pair, labels to mono eyebrows, `calc(100vh - 106px)` to `- 64px`. |
+| `ui/src/chatbox.css`, `chatbox.tsx`, `ChatMessage.tsx`, `Loader.tsx`, `public/advisor.svg` | The chat panel: `top: 64px`, Geist, bubbles as 6px cards with the speaker corner squared, the user bubble as the inverted `#171717` surface, robot cards matched to `.pcard`, icons and avatar in ink. This is the upstream NVIDIA stylesheet; the SPDX header stays. |
+| `ui/src/index.css` | `body` font to Geist, `.product-pane` to 64px. |
 
-The navbar is shared, so every page gets the new bar during the preview. The
-other pages still assume a 106px bar (`calc(100vh - 106px)`), so they run 42px
-short of the viewport bottom until they are restyled too. That is a known
-cost of the preview, not a bug to fix here.
+**One chromatic pixel survives.** The `✓` on a verified-seller stamp in the
+chat's robot cards is Terminal Green `#297a3a`, Vercel's one permitted accent,
+because "verified" is the one fact in the app a colour has always meant.
+Nothing in the current crawl sets `seller_verified`, so it does not render
+today.
 
 ## Mapping
 
@@ -77,18 +83,34 @@ Filter state in the query string. The `useCatalog` hook. `ProductCard`,
 (they re-frame `chatbox.css`, which is untouched upstream). Skeleton and empty
 states keep their copy; they change colour only.
 
-## Known tensions if adopted app-wide
+## What the accents became
 
-- DESIGN.md's verified green `#1B9E5A` and amber tutorial-count accent are both
-  chromatic and both banned. Neither appears on the catalogue card today, so
-  the preview avoids the question. App-wide, the verified badge becomes a mono
-  `✓ VERIFIED` stamp in Terminal Green `#297a3a` (Vercel's one permitted
-  chromatic accent) and amber goes.
+DESIGN.md's three-colour budget (green for actions, amber for data, green for
+verified) collapses to tone:
+
+| Was | Now |
+|---|---|
+| Green button, green link | Filled `#171717` button for the one primary action on a page; ghost outline for the rest; charcoal underlined text for links |
+| Green focus ring | Ink ring, offset by a canvas ring |
+| Amber skill / level chip | The one chip drawn with an ink border |
+| Amber rating segments | Filled ink segments on hairline grey |
+| Amber "dead on arrival" count | Ink at medium weight, in the sentence |
+| Amber tutorial count on a card | Mono ink stamp |
+| Red error text | Ink at medium weight; the field takes an ink ring |
+| Green "check your inbox" tint | Hairline panel with a `✓` in Terminal Green |
+| Verified-seller green fill | Mono `✓ VERIFIED` stamp, the tick in Terminal Green |
+
+## Known tensions if adopted
+
 - DESIGN.md is descriptive of what the app renders. If this is adopted it gets
-  rewritten after the pages change, not before.
+  rewritten after the pages change, not before. Every colour, radius and type
+  value in it is now wrong.
+- `chatbox.css` was "untouched upstream styling" (CLAUDE.md). It is touched
+  now; the catalogue's `.chat-widget` overrides in `catalog.css` still only
+  re-frame it and do not restyle it, so the rule's intent holds.
 
 ## Done when
 
 `npx tsc --noEmit`, `npm run build` and `npm run lint` are clean, the browser
-console is clean, and a screenshot of `/` at 1440×900 shows the first row of
-cards above the fold.
+console is clean, and screenshots of every page at 1440×900 show the first
+row of content above the fold.
