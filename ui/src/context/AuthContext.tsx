@@ -47,40 +47,45 @@ interface AuthValue {
 
 const AuthContext = createContext<AuthValue | null>(null);
 
+/* Decided once, at module load, so a missing env is a site with no accounts
+   from the first render rather than a "loading" that never resolves. Read as
+   literal expressions because Next inlines those (see lib/supabase/env). */
+const CONFIGURED = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+);
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [status, setStatus] = useState<AuthStatus>(
+    CONFIGURED ? "loading" : "signed-out"
+  );
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
-    let supabase: ReturnType<typeof createClient>;
-    try {
-      supabase = createClient();
-    } catch (error) {
-      // Missing env. Log the one line that says which, and behave as a site
-      // with no accounts rather than a site that never finishes loading.
-      console.error(error);
-      setStatus("signed-out");
+    if (!CONFIGURED) {
+      console.error(
+        "Supabase is not configured — copy ui/.env.example to ui/.env. Accounts are off."
+      );
       return;
     }
 
     // `onAuthStateChange` fires INITIAL_SESSION on subscribe, so no separate
     // getSession() call is needed — one path, not two that can disagree.
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    // The profile is cleared here too: a signed-out session has no name.
+    const { data } = createClient().auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setStatus(session ? "signed-in" : "signed-out");
+      if (!session) setProfile(null);
     });
 
     return () => data.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      return;
-    }
+    if (!user) return;
     let live = true;
     createClient()
       .from("profiles")

@@ -1,0 +1,185 @@
+/**
+ * Auth pages — sign in, sign up, password reset.
+ *
+ * One centred card on the panel ground. Tokens are redeclared here rather than
+ * imported from community.css for the same reason that file does not import
+ * tutorials.css: each page's styling loads and edits on its own (CLAUDE.md).
+ * Values are DESIGN.md's: field border #D8D8D8, green focus ring, 10px inputs,
+ * 15px pill button, ink/slate/muted text.
+ *
+ * No header band. The card is the whole page, so it sits in the vertical
+ * middle of the space under the navbar — a form at the top-left of a blank
+ * page reads as a broken layout. The page is a flex child of the layout's
+ * full-height column, so it takes whatever the navbar leaves rather than
+ * subtracting a navbar height it would have to know.
+ */
+
+.auth {
+  --primary: #76b900;
+  --ink: #101826;
+  --slate: #5a6678;
+  --muted: #666666;
+  --rule: #d8dee7;
+  --field: #d8d8d8;
+  --panel: #f9f9f9;
+  --error: #b3261e;
+
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  background: var(--panel);
+  font-family: "NVIDIA Sans", sans-serif;
+  color: var(--ink);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(16, 24, 38, 0.08);
+  padding: 28px 28px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-card__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.auth-card__lead {
+  margin: 0;
+  color: var(--slate);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-field__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.auth-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--field);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-input::placeholder {
+  color: #9aa4b2;
+}
+
+.auth-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.15);
+}
+
+.auth-input--invalid {
+  border-color: var(--error);
+}
+
+/* Errors say what to do, not that something is invalid (DESIGN.md §8). */
+.auth-error {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--error);
+}
+
+/* A result of the last action — "check your inbox" — not an error. */
+.auth-notice {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(118, 185, 0, 0.1);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.auth-button {
+  border: 0;
+  border-radius: 15px;
+  background: var(--primary);
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+  margin-top: 4px;
+}
+
+.auth-button:hover:not(:disabled) {
+  filter: brightness(0.93);
+}
+
+.auth-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.auth-link {
+  font-size: 13px;
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-link:hover {
+  color: #5f9600;
+}
+
+.auth-foot {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid #ececec;
+  font-size: 13px;
+  color: var(--slate);
+}
