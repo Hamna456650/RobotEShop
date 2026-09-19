@@ -137,9 +137,23 @@ deployment change and is not part of this spec.
    milliseconds per stage. These are the latency and cost numbers for the
    evaluation chapter.
 
-Estimated cost per turn: system ~400 + tool schemas ~350 + history ~600 + one
-tool result ~300–600 + reply ~200 ≈ 2,000–2,300 tokens. The manual script in
-*Verification* replaces this estimate with a measured number.
+Measured cost per turn on 2026-09-19 with `gemini-2.5-flash`, from the route's
+own log (`in` / `out` tokens, all steps summed):
+
+| Query | Steps | In | Out | ms |
+|---|---|---|---|---|
+| "hi" | 1 | 840 | 32 | 1,585 |
+| "ultrasonic sensor under Rs 500" | 2 | 2,084 | 224 | 2,369 |
+| "sensors for Arduino" (137 matches, facets included) | 2 | 2,784 | 356 | 10,438 |
+| "which of those is cheapest" (no new search) | 1 | 1,156 | 84 | 1,078 |
+| "what does I2C mean" | 1 | 1,196 | 112 | 1,561 |
+| "robots with ROS 2" | 1 | 1,321 | 492 | 3,155 |
+
+The pre-build estimate was 2,000–2,300 per turn; a turn with one search lands
+at 2,100–2,800 and every turn without one under 1,400. The Gemini free tier
+allows five `gemini-2.5-flash` requests a minute, which the eight-query script
+exceeded — the failover engaged and the fixed line was shown. Set
+`LLM_MODEL_GEMINI=gemini-2.5-flash-lite` or a paid key for a demo audience.
 
 ### System prompt
 
