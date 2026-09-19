@@ -38,8 +38,8 @@
   --sans: Geist, "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  /* 64px is the navbar, matching .catalog. */
-  height: calc(100vh - 64px);
+  /* The band under the navbar, matching .catalog. */
+  height: var(--page-h);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--panel);

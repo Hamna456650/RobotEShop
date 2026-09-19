@@ -33,6 +33,37 @@ code {
     monospace;
 }
 
+/* Layout tokens every page reads. `--nav-h` is the navbar's height: one row
+   on desktop, two below 1120px (see .nav-bar below). `--page-h` is what is
+   left for a page under it. Pages that fill the viewport set
+   `height: var(--page-h)` instead of subtracting a navbar height they would
+   otherwise have to know. `dvh` follows the mobile browser toolbar as it
+   hides; `vh` does not, and the fallback is for browsers without `dvh`. */
+:root {
+  --nav-h: 64px;
+  --page-h: calc(100vh - var(--nav-h));
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --page-h: calc(100dvh - var(--nav-h));
+  }
+}
+
+@media (max-width: 1120px) {
+  :root {
+    --nav-h: 104px;
+  }
+}
+
+/* The flex column that holds the navbar and the page. Tailwind 3.3 has no
+   `h-dvh`, so the height is set here: the second declaration wins where
+   `dvh` is understood and is ignored where it is not. */
+.app-shell {
+  height: 100vh;
+  height: 100dvh;
+}
+
 /* Navbar. It is a fixed 64px, so the links scroll sideways rather than
    wrapping — and the native horizontal bar is hidden, because at 15px tall it
    would take a quarter of the bar. Geist is the preview's face; the rest of
@@ -64,11 +95,11 @@ code {
   height: 100%;
 }
 
-/* Left product pane. 64px clears the navbar; the rest of the height is the
-   same band the fixed chat panel occupies. */
+/* Left product pane. Fills the band under the navbar, the same band the fixed
+   chat panel occupies. */
 .product-pane {
   width: 40vw;
-  height: calc(100vh - 64px);
+  height: var(--page-h);
   overflow: hidden;
   display: flex;
   align-items: center;

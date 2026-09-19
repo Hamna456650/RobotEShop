@@ -33,7 +33,7 @@
   background: var(--v-canvas);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px);      /* below the single 64px navbar */
+  height: var(--page-h);           /* the band under the navbar */
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--v-ash) transparent;
@@ -562,8 +562,8 @@
 }
 
 /*
- * Chatbox is `position: fixed; top: 64px; right: 0; width: 60vw` — sized to own
- * the right-hand half of the original screen. These overrides re-frame that same
+ * Chatbox is `position: fixed; top: var(--nav-h); right: 0; width: 60vw` —
+ * sized to own the right-hand half of the original screen. These overrides re-frame that same
  * component as a corner panel without touching chatbox.css, which the assistant
  * screen at /assistant still depends on.
  */
@@ -572,8 +572,8 @@
   inset: auto 24px 80px auto;
   z-index: 1100;
   width: 420px;
-  /* 64px of navbar above, 80px of launcher below, 16px clear. */
-  height: min(620px, calc(100vh - 160px));
+  /* The navbar above, 80px of launcher below, 16px clear. */
+  height: min(620px, calc(100vh - var(--nav-h) - 96px));
   /* Kept mounted while closed so the conversation survives being dismissed. */
   visibility: hidden;
   opacity: 0;
