@@ -12,10 +12,11 @@
 "use client";
 
 import React, { useState } from "react";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
 
 import Chatbox from "../chatbox/chatbox";
+import Mark from "../Mark";
+import { config } from "../../config/config";
 
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,8 +48,10 @@ const ChatWidget: React.FC = () => {
           </>
         ) : (
           <>
-            <ChatBubbleOutlineIcon fontSize="small" />
-            Ask the advisor
+            {/* The mark in white on the ink pill; the label is the same
+                "Ask Servo" the navbar, hero and footer use. */}
+            <Mark width={18} />
+            Ask {config.ui.brand}
           </>
         )}
       </button>

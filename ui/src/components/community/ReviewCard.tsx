@@ -19,9 +19,9 @@ import { exactDate, groupDigits, priceUnit, timeAgo, useLabel } from "./format";
 
 interface ReviewCardProps {
   review: Review;
-  /** This browser has already voted it helpful. */
+  /** The signed-in account has already voted it helpful. */
   voted: boolean;
-  /** This browser wrote it, so it may take it back. */
+  /** The signed-in account wrote it, so it may take it back. */
   own: boolean;
   /** Signed in. Voting is writing, and writing needs an account. */
   canVote: boolean;

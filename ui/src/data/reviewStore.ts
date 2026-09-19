@@ -1,209 +1,226 @@
 /**
  * Where community reviews live.
  *
- * This module is the only file that knows reviews are in `localStorage`. Every
- * function is `async` even though nothing here awaits anything, so that moving
- * to Supabase is a rewrite of this file and nothing else — no caller changes
- * shape, no component grows a loading state it did not already have.
+ * This module is the only file that knows reviews are rows in Supabase. The
+ * tables, triggers and policies are in
+ * docs/superpowers/specs/2026-09-19-community-supabase-design.md; the short
+ * version is three tables (`reviews`, `review_replies`, `review_votes`), all
+ * readable by anyone and writable only by a signed-in account.
  *
- * THE SUPABASE SWAP
- * =================
- * Replace the bodies below with `supabase.from(…)` calls against:
+ * Two things the client deliberately does NOT send:
  *
- *   create table reviews (
- *     id              uuid primary key default gen_random_uuid(),
- *     created_at      timestamptz not null default now(),
- *     author          text not null,
- *     rating          smallint not null check (rating between 1 and 5),
- *     title           text not null,
- *     body            text not null,
- *     board           text not null default '',
- *     months_used     smallint,          -- null = not stated
- *     arrived_working boolean,           -- null = not stated, see types/community.ts
- *     helpful         integer not null default 0,
- *     product         jsonb not null     -- TaggedProduct, denormalised on purpose
- *   );
+ *   author / author_id   A `before insert` trigger stamps both from the
+ *                        session and the profile row, so a review cannot be
+ *                        signed with a name the account does not own.
+ *   helpful              A trigger on `review_votes` keeps the count. Voting is
+ *                        one insert, and the primary key `(review_id, user_id)`
+ *                        is what makes it one vote per account.
  *
- *   create table review_replies (
- *     id         uuid primary key default gen_random_uuid(),
- *     review_id  uuid not null references reviews(id) on delete cascade,
- *     created_at timestamptz not null default now(),
- *     author     text not null,
- *     body       text not null
- *   );
- *   create index on review_replies (review_id, created_at);
+ * "Yours" is `authorId === user.id`, decided by the page; the database enforces
+ * the same rule on delete. Nothing here reads `localStorage` any more. The
+ * old `servo.community.*` keys are left where they are and nothing reads them:
+ * they held device-local test data from before there were accounts.
  *
- * `on delete cascade` is the database saying what `removeReview` below already
- * does by hand: a thread has no meaning once the review it answers is gone.
- * Note there is no `parent_id` — the flat thread is enforced by the schema, not
- * by the UI remembering not to nest.
- *
- * Two things stay on the device even then, because they are facts about this
- * browser rather than about the review: which reviews this visitor has voted
- * helpful, and which ones they wrote. (The author's name used to be a third;
- * it now comes from the signed-in account — see context/AuthContext.)
- * `helpful` itself becomes an RPC so the count is a server-side increment
- * rather than a read-modify-write that two open tabs can lose.
+ * Every write throws on failure with a sentence the page can show as is. The
+ * page decides how (a toast); this file does not know toasts exist.
  */
 
-import { Reply, ReplyDraft, ReplyIndex, Review, ReviewDraft } from "../types/community";
+import { createClient } from "../lib/supabase/client";
+import {
+  Reply,
+  ReplyDraft,
+  ReplyIndex,
+  Review,
+  ReviewDraft,
+  TaggedProduct,
+} from "../types/community";
 
-const REVIEWS_KEY = "servo.community.reviews.v1";
-const REPLIES_KEY = "servo.community.replies.v1";
-const VOTED_KEY = "servo.community.voted.v1";
-const AUTHORED_KEY = "servo.community.authored.v1";
+/* The row shapes, spelled the way Postgres spells them. Mapped to the camelCase
+   types at the boundary so nothing outside this file sees a snake_case field. */
+
+interface ReviewRow {
+  id: string;
+  created_at: string;
+  author_id: string;
+  author: string;
+  rating: number;
+  title: string;
+  body: string;
+  board: string;
+  months_used: number | null;
+  arrived_working: boolean | null;
+  helpful: number;
+  product: TaggedProduct;
+}
+
+interface ReplyRow {
+  id: string;
+  review_id: string;
+  created_at: string;
+  author_id: string;
+  author: string;
+  body: string;
+}
+
+const REVIEW_COLUMNS =
+  "id, created_at, author_id, author, rating, title, body, board, months_used, arrived_working, helpful, product";
+const REPLY_COLUMNS = "id, review_id, created_at, author_id, author, body";
+
+const toReview = (row: ReviewRow): Review => ({
+  id: row.id,
+  createdAt: row.created_at,
+  authorId: row.author_id,
+  author: row.author,
+  rating: row.rating,
+  title: row.title,
+  body: row.body,
+  board: row.board,
+  monthsUsed: row.months_used,
+  arrivedWorking: row.arrived_working,
+  helpful: row.helpful,
+  product: row.product,
+});
+
+const toReply = (row: ReplyRow): Reply => ({
+  id: row.id,
+  reviewId: row.review_id,
+  createdAt: row.created_at,
+  authorId: row.author_id,
+  author: row.author,
+  body: row.body,
+});
+
+/** Postgres's code for a unique-constraint violation. */
+const DUPLICATE_KEY = "23505";
 
 /**
- * Reading `localStorage` throws outright in some privacy modes rather than
- * returning null, so every access goes through these. A browser that refuses
- * storage gets an empty, working page instead of a blank one.
+ * Turn a Supabase error into the one line the reader sees. The raw message
+ * ("new row violates row-level security policy") is accurate and useless; what
+ * the reader needs is what to do next (DESIGN.md §8).
  */
-function read<T>(key: string, fallback: T): T {
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw === null ? fallback : (JSON.parse(raw) as T);
-  } catch {
-    return fallback;
-  }
-}
-
-function write(key: string, value: unknown): void {
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* Quota or a blocked store. The in-memory list still reflects the change
-       for this session; it just will not survive a reload. */
-  }
-}
-
-function newId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+function fail(what: string, error: { message: string } | null): never {
+  console.error(`[reviewStore] ${what}:`, error?.message);
+  throw new Error(what);
 }
 
 /** Newest first, which is the order every caller wants as its starting point. */
 export async function listReviews(): Promise<Review[]> {
-  const stored = read<Review[]>(REVIEWS_KEY, []);
-  if (!Array.isArray(stored)) return [];
-  return [...stored].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const { data, error } = await createClient()
+    .from("reviews")
+    .select(REVIEW_COLUMNS)
+    .order("created_at", { ascending: false });
+  if (error) fail("Couldn't load reviews. Check your connection and reload.", error);
+  return ((data ?? []) as unknown as ReviewRow[]).map(toReview);
 }
 
 export async function addReview(draft: ReviewDraft): Promise<Review> {
-  const review: Review = {
-    ...draft,
-    id: newId(),
-    createdAt: new Date().toISOString(),
-    helpful: 0,
-  };
-
-  const all = read<Review[]>(REVIEWS_KEY, []);
-  write(REVIEWS_KEY, [review, ...all]);
-  write(AUTHORED_KEY, [review.id, ...read<string[]>(AUTHORED_KEY, [])]);
-
-  return review;
+  const { data, error } = await createClient()
+    .from("reviews")
+    .insert({
+      rating: draft.rating,
+      title: draft.title,
+      body: draft.body,
+      board: draft.board,
+      months_used: draft.monthsUsed,
+      arrived_working: draft.arrivedWorking,
+      product: draft.product,
+    })
+    .select(REVIEW_COLUMNS)
+    .single();
+  if (error || !data) {
+    fail("Couldn't post your review. Check your connection and try again.", error);
+  }
+  return toReview(data as unknown as ReviewRow);
 }
 
 /**
- * One vote per review per browser. Returns the whole list because the caller
- * renders a list — handing back a single row would make it stitch the update
- * together itself, and get it wrong the day this is a server round trip.
+ * One vote per review per account. Returns the whole list because the caller
+ * renders a list; the count it wants is the one the trigger just wrote.
+ *
+ * A duplicate key is not a failure: it means this account already voted, and
+ * the page should simply show that.
  */
 export async function voteHelpful(id: string): Promise<Review[]> {
-  const voted = read<string[]>(VOTED_KEY, []);
-  if (voted.includes(id)) return listReviews();
-
-  const all = read<Review[]>(REVIEWS_KEY, []).map((review) =>
-    review.id === id ? { ...review, helpful: review.helpful + 1 } : review
-  );
-
-  write(REVIEWS_KEY, all);
-  write(VOTED_KEY, [id, ...voted]);
-
+  const { error } = await createClient()
+    .from("review_votes")
+    .insert({ review_id: id });
+  if (error && error.code !== DUPLICATE_KEY) {
+    fail("Couldn't save your vote. Try again in a moment.", error);
+  }
   return listReviews();
 }
 
 /**
- * There is no sign-in, so "your own" means "written from this browser". That
- * is weak by design: it is enough to let someone take back a review they just
- * posted, and it is replaced wholesale by row-level security under Supabase.
+ * Only the author's own rows get through: the delete policy is
+ * `author_id = auth.uid()`. Anyone else's delete is silently zero rows, which
+ * the re-fetch makes visible.
  */
 export async function removeReview(id: string): Promise<Review[]> {
-  write(
-    REVIEWS_KEY,
-    read<Review[]>(REVIEWS_KEY, []).filter((review) => review.id !== id)
-  );
-  // The thread goes with it. Replies answer a review; kept without one they
-  // are unreadable, and they would sit in storage forever with nothing able to
-  // render them. This is the `on delete cascade` above, done by hand.
-  write(
-    REPLIES_KEY,
-    read<Reply[]>(REPLIES_KEY, []).filter((reply) => reply.reviewId !== id)
-  );
-  write(
-    AUTHORED_KEY,
-    read<string[]>(AUTHORED_KEY, []).filter((authored) => authored !== id)
-  );
+  const { error } = await createClient().from("reviews").delete().eq("id", id);
+  if (error) fail("Couldn't delete that. Try again in a moment.", error);
+  // The thread and the votes go with it: `on delete cascade`.
   return listReviews();
 }
 
 /* REPLIES
    =======
-   Stored flat, exactly as the table above stores them, and grouped on the way
-   out. Grouping here rather than in the page means the feed asks for replies
-   once for every thread on screen — one `where review_id in (…)` after the
-   swap, not one request per card. */
+   Stored flat, grouped on the way out. Grouping here rather than in the page
+   means the feed asks for every thread in one request, not one per card. The
+   whole table is fetched; at this size that is the cheapest correct thing, and
+   the day it is not, this is the one function that pages. */
 
-/** Every thread, keyed by review id, oldest first — a conversation reads down. */
+/** Every thread, keyed by review id, oldest first: a conversation reads down. */
 export async function listReplies(): Promise<ReplyIndex> {
-  const stored = read<Reply[]>(REPLIES_KEY, []);
-  if (!Array.isArray(stored)) return {};
+  const { data, error } = await createClient()
+    .from("review_replies")
+    .select(REPLY_COLUMNS)
+    .order("created_at", { ascending: true });
+  if (error) fail("Couldn't load replies. Check your connection and reload.", error);
 
   const index: ReplyIndex = {};
-  [...stored]
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-    .forEach((reply) => {
-      if (!index[reply.reviewId]) index[reply.reviewId] = [];
-      index[reply.reviewId].push(reply);
-    });
-
+  ((data ?? []) as unknown as ReplyRow[]).map(toReply).forEach((reply) => {
+    if (!index[reply.reviewId]) index[reply.reviewId] = [];
+    index[reply.reviewId].push(reply);
+  });
   return index;
 }
 
 export async function addReply(draft: ReplyDraft): Promise<ReplyIndex> {
-  const reply: Reply = {
-    ...draft,
-    id: newId(),
-    createdAt: new Date().toISOString(),
-  };
-
-  write(REPLIES_KEY, [...read<Reply[]>(REPLIES_KEY, []), reply]);
-  write(AUTHORED_KEY, [reply.id, ...read<string[]>(AUTHORED_KEY, [])]);
-
+  const { error } = await createClient()
+    .from("review_replies")
+    .insert({ review_id: draft.reviewId, body: draft.body });
+  if (error) fail("Couldn't post your reply. Check your connection and try again.", error);
   return listReplies();
 }
 
 export async function removeReply(id: string): Promise<ReplyIndex> {
-  write(
-    REPLIES_KEY,
-    read<Reply[]>(REPLIES_KEY, []).filter((reply) => reply.id !== id)
-  );
-  write(
-    AUTHORED_KEY,
-    read<string[]>(AUTHORED_KEY, []).filter((authored) => authored !== id)
-  );
+  const { error } = await createClient()
+    .from("review_replies")
+    .delete()
+    .eq("id", id);
+  if (error) fail("Couldn't delete that. Try again in a moment.", error);
   return listReplies();
 }
 
-/* Device-local facts. Synchronous because they never leave this browser, and
-   they stay synchronous after the Supabase swap for the same reason. */
+/* VOTES
+   =====
+   Which reviews the signed-in account has marked helpful. The select policy
+   only returns the caller's own rows, so no filter is needed; signed out it
+   returns nothing, which is also right. Fetched once per load, not once per
+   card. */
 
-export function hasVoted(id: string): boolean {
-  return read<string[]>(VOTED_KEY, []).includes(id);
-}
-
-/** True for a review *or* a reply written from this browser — ids are unique. */
-export function isOwn(id: string): boolean {
-  return read<string[]>(AUTHORED_KEY, []).includes(id);
+export async function listMyVotes(): Promise<Set<string>> {
+  const { data, error } = await createClient()
+    .from("review_votes")
+    .select("review_id");
+  if (error) {
+    // Not worth failing the page over: the worst case is a "Helpful" button
+    // that should have read "Marked helpful", and the server refuses the
+    // second vote anyway.
+    console.error("[reviewStore] Couldn't load votes:", error.message);
+    return new Set();
+  }
+  return new Set(
+    ((data ?? []) as unknown as { review_id: string }[]).map((row) => row.review_id)
+  );
 }

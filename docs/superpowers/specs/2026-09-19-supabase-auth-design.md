@@ -2,8 +2,9 @@
 
 **Date:** 2026-09-19
 **Status:** approved, ready for a plan
-**Supersedes nothing. Prerequisite for:** moving community reviews out of
-`localStorage` (next spec).
+**Supersedes nothing. Prerequisite for:**
+[2026-09-19-community-supabase-design.md](2026-09-19-community-supabase-design.md),
+which moved community reviews out of `localStorage`.
 
 ## Why
 
@@ -135,9 +136,15 @@ env variable names. Everything else asks `useAuth()`.
 name 2–40 chars, valid email, password ≥ 8, passwords match. Calls
 `signUp({ email, password, options: { data: { display_name } } })`. With
 autoconfirm on, the response carries a session; the trigger has created the
-profile; the page routes to `?next=` or `/community`. If confirmation is later
-turned on, `session` is null and the same page shows "Check your inbox" —
-no second page needed.
+profile; the page routes to `/assistant` regardless of `?next=` (a new member's
+first screen is the assistant; `?next=` is only forwarded to the sign-in link).
+If confirmation is later turned on, `session` is null and the same page shows
+"Check your inbox" — no second page needed.
+
+Password fields on every auth form are `PasswordInput`: uncontrolled, read from
+the DOM at submit, with a show/hide eye. Uncontrolled because a password
+manager's "Use suggested password" writes to the node directly, and a controlled
+input whose state never saw that write is reset to empty on the next render.
 
 **Log in.** Email, password → `signInWithPassword`. A wrong pair shows Supabase's
 message reworded to say what to do ("That email and password don't match. Try

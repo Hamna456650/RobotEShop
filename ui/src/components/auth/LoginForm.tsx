@@ -2,24 +2,28 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 import { createClient } from "../../lib/supabase/client";
 import AuthCard from "./AuthCard";
 import { describeAuthError } from "./errors";
 import { safeNext } from "./nextPath";
+import PasswordInput from "./PasswordInput";
 
 const LoginForm: React.FC = () => {
   const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // Uncontrolled (see PasswordInput) so a saved password the browser fills in
+  // is never reset by a render.
+  const passwordRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const password = passwordRef.current?.value ?? "";
     if (!email.trim() || !password) {
       setError("Enter your email and password.");
       return;
@@ -81,13 +85,10 @@ const LoginForm: React.FC = () => {
               Forgot password?
             </Link>
           </div>
-          <input
+          <PasswordInput
             id="auth-password"
-            className="auth-input"
-            type="password"
+            inputRef={passwordRef}
             autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
           />
         </div>
 

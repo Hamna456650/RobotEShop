@@ -129,6 +129,52 @@
   box-shadow: 0 0 0 1px var(--ink);
 }
 
+/* Password fields carry a reveal toggle inside the box: a ghost icon button
+   at the right edge, slate at rest and ink on hover, the way every secondary
+   control in the system behaves. The input pads for it so a long password
+   never runs under the eye. */
+.auth-password {
+  position: relative;
+}
+
+.auth-input--password {
+  padding-right: 40px;
+}
+
+.auth-reveal {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--slate);
+  cursor: pointer;
+  padding: 0;
+}
+
+.auth-reveal svg {
+  width: 18px;
+  height: 18px;
+}
+
+.auth-reveal:hover {
+  color: var(--ink);
+  background: var(--panel);
+}
+
+.auth-reveal:focus-visible {
+  outline: none;
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
+}
+
 /* Errors say what to do, not that something is invalid (DESIGN.md §8). The
    system has no red: an error is ink at medium weight. */
 .auth-error {
@@ -159,8 +205,17 @@
 }
 
 /* The filled black primary. The one thing on the page that reaches #171717
-   as a fill. */
-.auth-button {
+   as a fill.
+
+   Scoped under `.auth-card` on purpose: Tailwind's preflight (index.css)
+   zeroes `[type="submit"]`'s background at the same specificity as a lone
+   class, so which rule wins depends on stylesheet order, and Next orders a
+   route's CSS differently in dev and in a production build. On Vercel the
+   preflight won and the button was a white box with white text until the
+   hover rule (higher specificity) filled it. The extra ancestor makes the
+   fill win regardless of order. The hover/disabled/focus rules below still
+   apply: they are later in the file at equal or higher specificity. */
+.auth-card .auth-button {
   height: 36px;
   border: 0;
   border-radius: var(--radius);

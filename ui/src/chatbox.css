@@ -247,6 +247,13 @@ html {
   height: 48px;
   flex: 0 0 auto;
   border-bottom: 1px solid #ebebeb;
+  gap: 8px;
+}
+
+/* The Servo mark before the panel name, pure black like the navbar's. */
+.chatbox__mark {
+  flex: 0 0 auto;
+  color: #000000;
 }
 
 .chatbox__image--header {
@@ -574,29 +581,71 @@ html {
   border-radius: 3px;
 }
 
+/* The photo card at chat size, per
+   docs/superpowers/specs/2026-09-19-photo-card-design.md: the same shadow and
+   lift as .pcard and .tut-card, a 12px radius because the card is 212px wide,
+   and a shorter zoom. The row it sits in already scrolls, so the shadow has
+   the row's own padding to fall into. */
 .robot-card {
   flex: 0 0 212px;
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border-radius: 6px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 2px #fafafa;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 8px 22px -8px rgba(0, 0, 0, 0.22);
+  isolation: isolate;
+  transform: translateZ(0);
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.robot-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 18px 36px -12px rgba(0, 0, 0, 0.32);
+}
+
+/* No rule under the photo: supplier images are shot on white, so the photo
+   and the body are one surface. */
 .robot-card__media {
   position: relative;
   background: #ffffff;
-  border-bottom: 1px solid var(--rule);
+  overflow: hidden;
 }
 
+/* `contain`, like the catalogue: cropping a component cuts its pins off. */
 .robot-card__media img {
   display: block;
   width: 100%;
   /* Shrinks on laptop heights so the card row and the reply both stay on
      screen together. */
   height: min(120px, 15vh);
-  object-fit: cover;
+  padding: 10px;
+  box-sizing: border-box;
+  object-fit: contain;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+.robot-card:hover .robot-card__media img {
+  transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .robot-card,
+  .robot-card__media img {
+    transition: none;
+  }
+
+  .robot-card:hover,
+  .robot-card:hover .robot-card__media img {
+    transform: none;
+  }
 }
 
 /* A mono stamp in a hairline pill, the ✓ in Terminal Green. */
@@ -618,8 +667,8 @@ html {
 .robot-card__body {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 10px 12px 12px;
+  gap: 6px;
+  padding: 10px 14px 14px;
 }
 
 .robot-card__name {

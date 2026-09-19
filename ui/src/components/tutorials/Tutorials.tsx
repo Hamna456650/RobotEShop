@@ -28,6 +28,7 @@ import { useTutorials } from '../../hooks/useTutorials';
 import FeaturedTutorial from './FeaturedTutorial';
 import FilterRail, { FilterGroup } from './FilterRail';
 import TutorialCard from './TutorialCard';
+import TutorialsSkeleton from './TutorialsSkeleton';
 import { FORMAT_LABEL, kitTotal, pricedPartCount } from './format';
 import '../../tutorials.css';
 
@@ -241,17 +242,19 @@ const Tutorials: React.FC = () => {
 
   /* Three states before the page has anything to show, kept apart because the
      fix is different for each: wait, start the server, or run the scraper.
-     A single "no tutorials" would hide which one it is. */
-  if (isLoading || error || allTutorials.length === 0) {
+     A single "no tutorials" would hide which one it is. Waiting gets the
+     page's own frame with shimmer where the data goes; the other two get a
+     sentence, because there is nothing coming. */
+  if (isLoading) return <TutorialsSkeleton />;
+
+  if (error || allTutorials.length === 0) {
     return (
       <main className="tutorials">
         <div className="tut-hero">
           <div className="tut-shell tut-hero__inner">
             <div>
               <h1 className="tut-hero__title">Learn the part before you buy it</h1>
-              {isLoading ? (
-                <p className="tut-hero__lead">Loading the tutorial library…</p>
-              ) : error ? (
+              {error ? (
                 <p className="tut-hero__lead">{error}</p>
               ) : (
                 <p className="tut-hero__lead">

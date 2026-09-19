@@ -6,12 +6,16 @@
  * pushing filter state into the URL here would add a round trip per tick
  * without making anything shareable that isn't already.
  *
+ * The response goes through `fetchCache`, so the second visit in a session
+ * renders the library on its first frame with no loading state.
+ *
  * An empty list is a real answer, not a failure: it means `run_tutorials.py`
  * has not been run yet. The page distinguishes that from a dead server.
  */
 
 import { useEffect, useState } from "react";
 import { config } from "../config/config";
+import { fetchCache } from "../lib/fetchCache";
 import { Tutorial } from "../types";
 
 interface TutorialsState {
@@ -25,30 +29,36 @@ interface TutorialsResponse {
   count: number;
 }
 
-export function useTutorials(): TutorialsState {
-  const [state, setState] = useState<TutorialsState>({
-    tutorials: [],
-    isLoading: true,
+const URL = `${config.api.baseUrl}/tutorials`;
+
+function fromResponse(data: TutorialsResponse): TutorialsState {
+  return {
+    tutorials: Array.isArray(data.tutorials) ? data.tutorials : [],
+    isLoading: false,
     error: null,
+  };
+}
+
+export function useTutorials(): TutorialsState {
+  const [state, setState] = useState<TutorialsState>(() => {
+    const cached = fetchCache.peek<TutorialsResponse>(URL);
+    return cached ? fromResponse(cached) : { tutorials: [], isLoading: true, error: null };
   });
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (fetchCache.peek(URL) !== undefined) return;
 
-    fetch(`${config.api.baseUrl}/tutorials`, { signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error(`The server answered ${res.status}.`);
-        return res.json();
+    // The request is not cancelled on unmount; it belongs to the cache and
+    // the next visit wants its answer. Only this component stops listening.
+    let live = true;
+
+    fetchCache
+      .load<TutorialsResponse>(URL)
+      .then((data) => {
+        if (live) setState(fromResponse(data));
       })
-      .then((data: TutorialsResponse) => {
-        setState({
-          tutorials: Array.isArray(data.tutorials) ? data.tutorials : [],
-          isLoading: false,
-          error: null,
-        });
-      })
-      .catch((err: Error) => {
-        if (err.name === "AbortError") return;
+      .catch(() => {
+        if (!live) return;
         setState({
           tutorials: [],
           isLoading: false,
@@ -57,7 +67,9 @@ export function useTutorials(): TutorialsState {
         });
       });
 
-    return () => controller.abort();
+    return () => {
+      live = false;
+    };
   }, []);
 
   return state;

@@ -1,29 +1,33 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 import { createClient } from "../../lib/supabase/client";
 import AuthCard from "./AuthCard";
 import { describeAuthError } from "./errors";
+import PasswordInput from "./PasswordInput";
 
 const PASSWORD_MIN = 8;
 
 const UpdatePasswordForm: React.FC = () => {
   const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  // Uncontrolled (see PasswordInput) so a generated password survives renders.
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const confirmRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const password = passwordRef.current?.value ?? "";
+    const confirm = confirmRef.current?.value ?? "";
     if (password.length < PASSWORD_MIN) {
       setError(`Use at least ${PASSWORD_MIN} characters.`);
       return;
     }
     if (confirm !== password) {
-      setError("The two passwords don't match — type them again.");
+      setError("The two passwords don't match. Type them again.");
       return;
     }
 
@@ -58,13 +62,10 @@ const UpdatePasswordForm: React.FC = () => {
           <label className="auth-label" htmlFor="auth-password">
             New password
           </label>
-          <input
+          <PasswordInput
             id="auth-password"
-            className="auth-input"
-            type="password"
+            inputRef={passwordRef}
             autoComplete="new-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
           />
         </div>
 
@@ -72,13 +73,10 @@ const UpdatePasswordForm: React.FC = () => {
           <label className="auth-label" htmlFor="auth-confirm">
             New password again
           </label>
-          <input
+          <PasswordInput
             id="auth-confirm"
-            className="auth-input"
-            type="password"
+            inputRef={confirmRef}
             autoComplete="new-password"
-            value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
           />
         </div>
 

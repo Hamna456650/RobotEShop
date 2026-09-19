@@ -284,8 +284,13 @@
    `.com-button` is the filled black primary — the strongest weight in the
    system and the one thing on a page that reaches #171717 as a fill. Text
    links are the lowest-weight interactive: charcoal, underlined, ink on
-   hover. */
-.com-button {
+   hover.
+
+   Scoped under `.community` for the same reason `.auth-card .auth-button`
+   is: Tailwind's preflight clears `button` and `[type="submit"]` backgrounds
+   at single-class specificity, and stylesheet order differs between dev and
+   a production build. The ancestor makes the fill win in both. */
+.community .com-button {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
@@ -311,7 +316,7 @@
 /* The hero's copy of the button, sized to the band rather than to a page that
    has room. Everywhere else — empty states, the composer — keeps the full
    size, because there the button is the thing on screen. */
-.com-button--compact {
+.community .com-button--compact {
   /* `.com-button` pins itself to the start of a column; in a row beside a
      search field that would top-align it against the input. */
   align-self: auto;
@@ -692,6 +697,65 @@
   cursor: pointer;
 }
 
+/* THE OPEN LIST
+   Chrome 135+ lets a page style the native <select> picker through
+   `appearance: base-select`; without it the open list is the OS one, blue
+   highlight and all, and no amount of CSS reaches it. A browser that does not
+   know the value ignores this whole block and keeps its native picker, so
+   nothing breaks elsewhere. The list borrows the tagger panel's surface (white,
+   6px, one hairline ring and a faint drop shadow); rows go paper on hover and
+   hairline once chosen, ink text throughout, no tick. Applies to both selects
+   on the page: "Time in use" in the composer and the sort in the toolbar. */
+.com-select,
+.com-select::picker(select),
+.com-sort select,
+.com-sort select::picker(select) {
+  appearance: base-select;
+}
+
+.com-select::picker-icon,
+.com-sort select::picker-icon {
+  color: var(--slate);
+}
+
+.com-select::picker(select),
+.com-sort select::picker(select) {
+  margin-top: 6px;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.com-select option,
+.com-sort select option {
+  padding: 7px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+}
+
+.com-select option:hover,
+.com-select option:focus-visible,
+.com-sort select option:hover,
+.com-sort select option:focus-visible {
+  background: var(--panel);
+  outline: none;
+}
+
+.com-select option:checked,
+.com-sort select option:checked {
+  background: var(--hairline);
+}
+
+.com-select option::checkmark,
+.com-sort select option::checkmark {
+  display: none;
+}
+
 /* PRODUCT TAGGER
    ==============
    The one control on the page that has to be good — a review with no part
@@ -1011,38 +1075,60 @@
 
 /* THE REVIEW
    ==========
-   Same card family as .tut-card and .pcard — 6px radius, stacked-ring
-   hairline, mono figures. The strip across the top is what makes it this
+   Same card surface as .tut-card and .pcard, per
+   docs/superpowers/specs/2026-09-19-photo-card-design.md: 16px radius, a
+   soft drop shadow, a hover lift. A review is prose rather than a photo, so
+   it keeps its own layout — the strip across the top is what makes it this
    app's review and not a generic one: the part, its photo, what it cost and
    how many sellers carry it, so the opinion is anchored to something
    orderable. */
 .com-feed {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
+  /* Room for the shadow to fall. */
+  padding: 4px 4px 24px;
 }
 
 .com-review {
+  --card-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 10px 28px -8px rgba(0, 0, 0, 0.22);
+  --card-shadow-hover:
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 24px 48px -12px rgba(0, 0, 0, 0.34);
+
   background: var(--surface);
-  border-radius: var(--radius);
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--ring);
+  box-shadow: var(--card-shadow);
+  transform: translateZ(0);
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* A smaller lift than the grid cards: a full-width card that jumps 3px
+   moves a lot of page. */
+.com-review:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .com-review__product {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   background: var(--media);
   border-bottom: 1px solid var(--rule);
-  padding: 9px 16px;
+  padding: 12px 20px;
 }
 
 .com-review__thumb {
-  width: 44px;
-  height: 44px;
-  border-radius: 4px;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
   background: var(--surface);
   border: 1px solid var(--rule);
   overflow: hidden;
@@ -1101,10 +1187,10 @@
 }
 
 .com-review__body {
-  padding: 14px 16px 13px;
+  padding: 18px 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
 }
 
 /* Bar and headline on one line: the score qualifies the sentence, so reading
@@ -1477,7 +1563,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .com-button,
+  .com-review:hover {
+    transform: none;
+  }
+
+  .com-review,
+  .community .com-button,
   .com-choice,
   .com-helpful,
   .com-threadtoggle,

@@ -27,6 +27,12 @@ export interface AppConfig {
     categories: string[];
     /** Which category renders as the current one. */
     activeCategory: string;
+    /**
+     * The stores the crawl covers, as the landing page names them. The
+     * scraper's config.yaml is the authority; this list is what the copy
+     * says, so keep the two in step when a site is added.
+     */
+    stores: string[];
   };
   features: {
     guardrails: {
@@ -78,6 +84,7 @@ const getConfig = (): AppConfig => {
         "ROBOT KITS",
       ],
       activeCategory: "SENSORS",
+      stores: ["robo.pk", "robostan.pk", "instock.pk", "Unitree", "Nexa Robots"],
     },
     features: {
       guardrails: {

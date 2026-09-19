@@ -26,6 +26,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { config } from "../config/config";
 import { useAuth } from "../context/AuthContext";
+import Mark from "./Mark";
 
 /** "MOTORS & ACTUATORS" -> "motors-and-actuators", which Catalog reverses. */
 export const categorySlug = (category: string): string =>
@@ -69,12 +70,9 @@ const Navbar: React.FC = () => {
         href="/"
         className="shrink-0 flex items-center gap-2 mr-4 text-[14px] font-medium text-[#171717] no-underline"
       >
-        {/* A plain black square: the wordmark's glyph, and the one element
-            allowed to be pure #000. */}
-        <span
-          aria-hidden="true"
-          className="inline-block w-[10px] h-[10px] bg-[#000000]"
-        />
+        {/* The Servo mark: the wordmark's glyph, and the one element allowed
+            to be pure #000. */}
+        <Mark width={20} className="text-[#000000]" />
         {brand}
       </Link>
 
@@ -99,6 +97,15 @@ const Navbar: React.FC = () => {
         </Link>
         <Link href="/community" className={linkClass(isActive("/community"))}>
           Community
+        </Link>
+        {/* The assistant is the product's argument, so it gets the bar's one
+            filled control: the Vercel pill, ink on paper, 9999px in the tight
+            header context where a 6px rectangle would read as a form field. */}
+        <Link
+          href="/assistant"
+          className="shrink-0 whitespace-nowrap rounded-full bg-[#171717] px-[14px] py-[6px] text-[14px] font-normal leading-none text-white no-underline hover:bg-black"
+        >
+          Ask {brand}
         </Link>
       </nav>
 

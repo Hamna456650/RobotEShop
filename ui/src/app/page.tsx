@@ -1,6 +1,6 @@
-import CatalogScreen from "../components/catalog/CatalogScreen";
+import LandingScreen from "../components/landing/LandingScreen";
 
-/** `/` — the catalogue, unfiltered. Same screen as /catalog. */
+/** `/` — the landing page. The catalogue lives at /catalog. */
 export default function HomePage() {
-  return <CatalogScreen />;
+  return <LandingScreen />;
 }

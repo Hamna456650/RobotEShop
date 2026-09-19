@@ -1,15 +1,10 @@
-import Apparel from "../../components/Apparel";
-import Chatbox from "../../components/chatbox/chatbox";
+import AssistantScreen from "../../components/chatbox/AssistantScreen";
 
 /**
- * `/assistant` — the original chat-led screen, unchanged: the full-height
- * panel beside the splash image that image upload renders into.
+ * `/assistant` — the original chat-led screen: the full-height panel beside
+ * the splash image that image upload renders into. `?q=` seeds the first
+ * question; see AssistantScreen.
  */
 export default function AssistantPage() {
-  return (
-    <>
-      <Apparel />
-      <Chatbox />
-    </>
-  );
+  return <AssistantScreen />;
 }

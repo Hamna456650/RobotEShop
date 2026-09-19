@@ -38,3 +38,7 @@ ui/.cache/
 .env
 .env.local
 *.local
+
+# Brainstorming mockups from the superpowers visual companion. Session
+# scratch, not source.
+.superpowers/

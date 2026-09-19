@@ -28,9 +28,10 @@ interface ReplyThreadProps {
   reviewId: string;
   /** The whole thread, oldest first. */
   replies: Reply[];
-  /** Ids written from this browser, so they can be taken back. */
+  /** Ids written by the signed-in account, so they can be taken back. */
   ownIds: Set<string>;
-  /** The signed-in account's display name. Replies are signed with it. */
+  /** The signed-in account's display name, for the "Posting as" hint. The
+      database signs the row from the session, not from this prop. */
   author: string;
   /** False while signed out: the thread reads, but the box is a sign-in link. */
   canWrite: boolean;
@@ -85,8 +86,10 @@ const ReplyThread: React.FC<ReplyThreadProps> = ({
     setError(null);
     setIsSaving(true);
     try {
-      await onSubmit({ reviewId, body, author });
+      await onSubmit({ reviewId, body });
       onDraftChange(reviewId, "");
+    } catch {
+      /* Reported by the page. The draft is left in the box on purpose. */
     } finally {
       setIsSaving(false);
     }

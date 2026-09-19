@@ -46,10 +46,15 @@ const CONDITION_OPTIONS: { value: string; label: string }[] = [
   { value: "unsaid", label: "Not saying" },
 ];
 
+/* Mirrors the check constraint on reviews.body, so the database never rejects
+   what the form accepted. The counter under the field reads "21 of 40
+   characters" until the minimum is met, so nobody finds out at the button. */
 const BODY_MIN = 40;
 
 interface ReviewFormProps {
-  /** The signed-in account's display name. The review is signed with it. */
+  /** The signed-in account's display name, shown so the writer knows how the
+      review will be signed. The signature itself is applied by the database
+      from the session, not from this prop. */
   author: string;
   onSubmit: (draft: ReviewDraft) => Promise<void>;
   onCancel: () => void;
@@ -87,6 +92,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     panelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, []);
 
+  const bodyLength = body.trim().length;
+
   /** The tagged part's own platforms first, then the standing list. */
   const boardSuggestions = Array.from(
     new Set([...(product?.platforms ?? []), ...COMMON_BOARDS])
@@ -97,10 +104,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     if (!product) found.product = "Pick the part this review is about.";
     if (rating === 0) found.rating = "Give it a score from 1 to 5.";
     if (title.trim().length < 4) {
-      found.title = "Write a headline — one line on how it went.";
+      found.title = "Write a headline: one line on how it went.";
     }
     if (body.trim().length < BODY_MIN) {
-      found.body = `Say a little more — ${BODY_MIN} characters at least, so the next person learns something.`;
+      found.body = `Say a little more. Reviews need at least ${BODY_MIN} characters so the next person learns something.`;
     }
     return found;
   };
@@ -130,8 +137,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         monthsUsed: months === "" ? null : Number(months),
         arrivedWorking:
           condition === "yes" ? true : condition === "no" ? false : null,
-        author,
       });
+    } catch {
+      /* The page has already told the reader what went wrong. The job here is
+         to leave every field exactly as it was so they can try again. */
     } finally {
       setIsSaving(false);
     }
@@ -143,8 +152,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         <h2 className="com-form__title">Write a review</h2>
         <p className="com-form__lead">
           Say what you wired it to and how it held up. It will be signed{" "}
-          <b>{author}</b>. Reviews stay in this browser for now — nothing is
-          sent anywhere.
+          <b>{author}</b> and published as soon as you post it.
         </p>
       </div>
 
@@ -194,7 +202,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
       <div className="com-field">
         <label className="com-label" htmlFor="com-body">
-          What happened
+          How it went
         </label>
         <textarea
           id="com-body"
@@ -206,17 +214,21 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           value={body}
           aria-invalid={Boolean(errors.body) || undefined}
           onChange={(event) => setBody(event.target.value)}
-          placeholder="How you wired it, what you built with it, anything that caught you out."
+          placeholder="How you wired it, what you built with it, and how it held up."
         />
         <div className="com-field__foot">
           {errors.body ? (
             <p className="com-error">{errors.body}</p>
           ) : (
             <p className="com-hint">
-              What went wrong is usually the most useful part.
+              Good or bad, the specifics are what help the next person.
             </p>
           )}
-          <span className="com-counter">{body.trim().length}</span>
+          <span className="com-counter">
+            {bodyLength < BODY_MIN
+              ? `${bodyLength} of ${BODY_MIN} characters`
+              : bodyLength}
+          </span>
         </div>
       </div>
 

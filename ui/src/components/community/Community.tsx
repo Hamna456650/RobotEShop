@@ -15,16 +15,19 @@
  *             time. This page owns `openThread` for that reason, and owns the
  *             unsent drafts too so closing a thread never eats what was typed.
  *
- * Storage is `localStorage`, behind the async module in data/reviewStore. Every
- * call here is already awaited, so pointing that module at Supabase changes
- * nothing in this file. Identity comes from `useAuth()`: writing needs an
- * account, and the display name is what a review is signed with.
+ * Storage is Supabase, behind the async module in data/reviewStore; this file
+ * never sees a table name. Identity comes from `useAuth()`: writing needs an
+ * account, the database signs each row from the session, and "yours" means
+ * the row's `authorId` is the session's user id. Writes can fail now that they
+ * cross a network, so every one is caught and reported as a toast that says
+ * what to do; the text being written is never thrown away on failure.
  */
 
 "use client";
 
 import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
 import {
   ReplyDraft,
@@ -36,10 +39,9 @@ import {
 import {
   addReply,
   addReview,
-  isOwn,
+  listMyVotes,
   listReplies,
   listReviews,
-  hasVoted,
   removeReply,
   removeReview,
   voteHelpful,
@@ -85,6 +87,7 @@ const FACETS: {
 ];
 
 const EMPTY_SELECTION: Record<string, string[]> = {};
+const NO_VOTES: Set<string> = new Set();
 
 /** Free text runs over everything someone might half-remember. */
 const searchable = (review: Review): string =>
@@ -116,47 +119,96 @@ const Community: React.FC = () => {
   const [openThread, setOpenThread] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-  /* Device-local facts, snapshotted whenever the list changes rather than read
-     from storage inside every card's render. */
-  const [voted, setVoted] = useState<Set<string>>(new Set());
-  const [own, setOwn] = useState<Set<string>>(new Set());
+  /* Which reviews this account has marked helpful. Fetched once per account,
+     not read inside every card's render. The set remembers whose it is, so
+     signing out (or switching accounts) shows no votes without a write to
+     state: the stale set simply stops matching. */
+  const [votes, setVotes] = useState<{ owner: string | null; ids: Set<string> }>(
+    { owner: null, ids: new Set() }
+  );
+
+  /* The first fetch failing is a different state from "no reviews yet": the
+     hero has to say so, and the empty state must not invite the reader to write
+     the first review of a library it could not read. */
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   /* Writing needs an account; reading does not. While the session is still
      being read the write controls are disabled, not swapped for "Sign in" —
      a signed-in reader should never see that flash. */
-  const { status, displayName } = useAuth();
+  const { status, user, displayName } = useAuth();
   const canWrite = status === "signed-in";
+  const userId = user?.id ?? null;
+  const voted = userId && votes.owner === userId ? votes.ids : NO_VOTES;
 
   const adopt = useCallback((next: Review[], threads: ReplyIndex) => {
     setReviews(next);
     setReplies(threads);
-    setVoted(new Set(next.filter((r) => hasVoted(r.id)).map((r) => r.id)));
+  }, []);
 
-    // Reviews and replies share one authored list, so ownership is decided in
-    // one pass over both rather than two rules that could drift apart.
+  /* Ownership is a comparison, not a list: a row is yours when its author id
+     is the session's. One rule covers reviews and replies, and it is the same
+     rule the database applies on delete, so the button and the policy cannot
+     disagree. */
+  const own = useMemo(() => {
     const mine = new Set<string>();
-    next.forEach((review) => {
-      if (isOwn(review.id)) mine.add(review.id);
+    if (!userId) return mine;
+    reviews.forEach((review) => {
+      if (review.authorId === userId) mine.add(review.id);
     });
-    Object.values(threads).forEach((thread) =>
+    Object.values(replies).forEach((thread) =>
       thread.forEach((reply) => {
-        if (isOwn(reply.id)) mine.add(reply.id);
+        if (reply.authorId === userId) mine.add(reply.id);
       })
     );
-    setOwn(mine);
-  }, []);
+    return mine;
+  }, [reviews, replies, userId]);
 
   useEffect(() => {
     let live = true;
-    Promise.all([listReviews(), listReplies()]).then(([found, threads]) => {
-      if (!live) return;
-      adopt(found, threads);
-      setIsLoading(false);
-    });
+    Promise.all([listReviews(), listReplies()])
+      .then(([found, threads]) => {
+        if (!live) return;
+        adopt(found, threads);
+        setLoadError(null);
+      })
+      .catch((error: unknown) => {
+        if (!live) return;
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "Couldn't load reviews. Check your connection and reload."
+        );
+      })
+      .finally(() => {
+        if (live) setIsLoading(false);
+      });
     return () => {
       live = false;
     };
   }, [adopt]);
+
+  /* Votes are per account, so they are re-read when the account changes: sign
+     in and the buttons you already pressed light up. */
+  useEffect(() => {
+    if (!userId) return;
+    let live = true;
+    listMyVotes().then((ids) => {
+      if (live) setVotes({ owner: userId, ids });
+    });
+    return () => {
+      live = false;
+    };
+  }, [userId]);
+
+  /** Every write goes through here, so a failure is one sentence in one place
+      and the caller's text is still where they left it. */
+  const report = (error: unknown) => {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Something went wrong. Try again in a moment."
+    );
+  };
 
   const trimmedQuery = query.trim().toLowerCase();
   const hasFilters = Object.values(selected).some((v) => v.length > 0);
@@ -177,9 +229,18 @@ const Community: React.FC = () => {
     setQuery("");
   };
 
+  /* The write handlers report a failure and then rethrow it. The forms await
+     these and only clear their text on the way out, so the throw is what keeps
+     a half-written review on screen after a dropped connection. */
+
   const handleSubmit = async (draft: ReviewDraft) => {
-    await addReview(draft);
-    adopt(await listReviews(), await listReplies());
+    try {
+      await addReview(draft);
+      adopt(await listReviews(), await listReplies());
+    } catch (error) {
+      report(error);
+      throw error;
+    }
     setIsComposing(false);
     // A new review can land outside the current filters, which reads as the
     // post having failed. Clearing puts it where the writer expects to see it.
@@ -188,15 +249,33 @@ const Community: React.FC = () => {
   };
 
   const handleHelpful = async (id: string) => {
-    if (!canWrite) return;
-    adopt(await voteHelpful(id), replies);
+    if (!canWrite || !userId || voted.has(id)) return;
+    // Flip the button now; the count arrives with the re-fetch. If the vote is
+    // refused the flip is undone, so the button never lies for long.
+    setVotes({ owner: userId, ids: new Set(voted).add(id) });
+    try {
+      adopt(await voteHelpful(id), replies);
+    } catch (error) {
+      setVotes((current) => {
+        const ids = new Set(current.ids);
+        ids.delete(id);
+        return { owner: current.owner, ids };
+      });
+      report(error);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    // The store drops the thread with the review; this drops the open panel and
-    // the draft, which would otherwise point at a review that no longer exists.
-    const remaining = await removeReview(id);
-    adopt(remaining, await listReplies());
+    // The database drops the thread with the review; this drops the open panel
+    // and the draft, which would otherwise point at a review that no longer
+    // exists.
+    try {
+      const remaining = await removeReview(id);
+      adopt(remaining, await listReplies());
+    } catch (error) {
+      report(error);
+      return;
+    }
     if (openThread === id) setOpenThread(null);
     setDrafts((current) => {
       const { [id]: _gone, ...rest } = current;
@@ -216,11 +295,20 @@ const Community: React.FC = () => {
   };
 
   const handleReply = async (draft: ReplyDraft) => {
-    adopt(reviews, await addReply(draft));
+    try {
+      adopt(reviews, await addReply(draft));
+    } catch (error) {
+      report(error);
+      throw error;
+    }
   };
 
   const handleDeleteReply = async (id: string) => {
-    adopt(reviews, await removeReply(id));
+    try {
+      adopt(reviews, await removeReply(id));
+    } catch (error) {
+      report(error);
+    }
   };
 
   /** True when the review satisfies every group except `skipKey`. */
@@ -348,7 +436,9 @@ const Community: React.FC = () => {
                 publish — it keeps the amber and it keeps its denominator, it
                 just stops costing a paragraph to say. */}
             {isLoading ? (
-              <p className="com-hero__coverage">Reading your saved reviews…</p>
+              <p className="com-hero__coverage">Loading reviews…</p>
+            ) : loadError ? (
+              <p className="com-hero__coverage">{loadError}</p>
             ) : coverage.total === 0 ? (
               <p className="com-hero__coverage">
                 Nothing here yet. The first review is the one that makes the
@@ -425,8 +515,8 @@ const Community: React.FC = () => {
             </div>
 
             <p className="com-hero__note">
-              Reviews and replies live in this browser only — nobody else can
-              see them yet.
+              Every review is signed by an account and visible to everyone who
+              reads this page.
             </p>
           </div>
         </div>
@@ -486,7 +576,10 @@ const Community: React.FC = () => {
               </div>
             )}
 
-            {isLoading ? null : results.length > 0 ? (
+            {/* A failed load shows nothing here: the hero has said what
+                happened, and the "No reviews yet" invitation below would be a
+                claim about a library this page could not read. */}
+            {isLoading || loadError ? null : results.length > 0 ? (
               <div className="com-feed">
                 {results.map((review) => (
                   <ReviewCard

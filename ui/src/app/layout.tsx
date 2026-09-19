@@ -17,11 +17,13 @@ import Navbar from "../components/Navbar";
 import Providers from "./providers";
 import { config } from "../config/config";
 
+// No `icons` entry: the tab icons are Next's file conventions beside this
+// file (icon.svg, icon.png, apple-icon.png), all drawn from the Servo mark
+// in components/Mark.tsx. See docs/superpowers/specs/2026-09-19-brand-mark-design.md.
 export const metadata: Metadata = {
   title: config.ui.brand,
   description:
     "A unified web aggregation platform for educational and industrial robots.",
-  icons: { icon: "/favicon.png" },
 };
 
 export const viewport: Viewport = {

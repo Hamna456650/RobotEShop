@@ -2,12 +2,20 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 import { createClient } from "../../lib/supabase/client";
 import AuthCard from "./AuthCard";
 import { describeAuthError } from "./errors";
 import { safeNext } from "./nextPath";
+import PasswordInput from "./PasswordInput";
+
+/* A new account lands on the assistant, whatever page the sign-up link was
+   on: it is the product's argument, and the first thing a new member should
+   see is the thing no other robotics store has. `?next=` is still carried to
+   the sign-in link so someone who already has an account goes back where they
+   were. */
+const AFTER_SIGN_UP = "/assistant";
 
 /* Mirrors the check constraint on profiles.display_name and the project's
    password_min_length, so the server never rejects what the form accepted. */
@@ -28,19 +36,20 @@ const SignUpForm: React.FC = () => {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  // The password fields are uncontrolled (see PasswordInput) and read here.
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const confirmRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   // Only reached if email confirmation is turned back on in the project.
   const [awaitingEmail, setAwaitingEmail] = useState(false);
 
-  const validate = (): Errors => {
+  const validate = (password: string, confirm: string): Errors => {
     const found: Errors = {};
     const trimmedName = name.trim();
     if (trimmedName.length < NAME_MIN || trimmedName.length > NAME_MAX) {
-      found.name = `Pick a name between ${NAME_MIN} and ${NAME_MAX} characters — it signs your reviews.`;
+      found.name = `Pick a name between ${NAME_MIN} and ${NAME_MAX} characters. It signs your reviews.`;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       found.email = "Enter an email address you can receive mail at.";
@@ -49,14 +58,16 @@ const SignUpForm: React.FC = () => {
       found.password = `Use at least ${PASSWORD_MIN} characters.`;
     }
     if (confirm !== password) {
-      found.confirm = "The two passwords don't match — type them again.";
+      found.confirm = "The two passwords don't match. Type them again.";
     }
     return found;
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const found = validate();
+    const password = passwordRef.current?.value ?? "";
+    const confirm = confirmRef.current?.value ?? "";
+    const found = validate(password, confirm);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
 
@@ -78,7 +89,7 @@ const SignUpForm: React.FC = () => {
       setAwaitingEmail(true);
       return;
     }
-    router.push(next);
+    router.push(AFTER_SIGN_UP);
     router.refresh();
   };
 
@@ -103,7 +114,7 @@ const SignUpForm: React.FC = () => {
     >
       {awaitingEmail ? (
         <p className="auth-notice">
-          Check your inbox — there is a confirmation link waiting. Once you have
+          Check your inbox: there is a confirmation link waiting. Once you have
           followed it, sign in.
         </p>
       ) : (
@@ -146,14 +157,11 @@ const SignUpForm: React.FC = () => {
             <label className="auth-label" htmlFor="auth-password">
               Password
             </label>
-            <input
+            <PasswordInput
               id="auth-password"
-              className={field("password")}
-              type="password"
+              inputRef={passwordRef}
               autoComplete="new-password"
-              value={password}
-              aria-invalid={Boolean(errors.password) || undefined}
-              onChange={(event) => setPassword(event.target.value)}
+              invalid={Boolean(errors.password)}
             />
             {errors.password && (
               <p className="auth-error">{errors.password}</p>
@@ -164,14 +172,11 @@ const SignUpForm: React.FC = () => {
             <label className="auth-label" htmlFor="auth-confirm">
               Password again
             </label>
-            <input
+            <PasswordInput
               id="auth-confirm"
-              className={field("confirm")}
-              type="password"
+              inputRef={confirmRef}
               autoComplete="new-password"
-              value={confirm}
-              aria-invalid={Boolean(errors.confirm) || undefined}
-              onChange={(event) => setConfirm(event.target.value)}
+              invalid={Boolean(errors.confirm)}
             />
             {errors.confirm && <p className="auth-error">{errors.confirm}</p>}
           </div>

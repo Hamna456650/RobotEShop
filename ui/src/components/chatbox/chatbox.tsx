@@ -26,6 +26,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 
 import ChatMessage from "./ChatMessage";
+import Mark from "../Mark";
 import { config } from "../../config/config";
 import { useRenderImage } from "../../context/RenderImageContext";
 import { showCartNotification } from "../../utils";
@@ -34,7 +35,16 @@ import { showCartNotification } from "../../utils";
  * Main chatbox component for the shopping assistant
  */
 
-const Chatbox: React.FC = () => {
+interface ChatboxProps {
+  /**
+   * A question to send as soon as the intro has played. The landing page's
+   * ask bar hands its text over this way (`/assistant?q=`), so the visitor
+   * lands on an answer in progress rather than an empty panel.
+   */
+  initialQuery?: string;
+}
+
+const Chatbox: React.FC<ChatboxProps> = ({ initialQuery }) => {
   const { setNewRenderImage } = useRenderImage();
   const [isOpen, setIsOpen] = useState<boolean>(true);
   const [hasBeenOpened, setHasBeenOpened] = useState<boolean>(false);
@@ -171,8 +181,9 @@ const Chatbox: React.FC = () => {
     });
   };
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() && !image) return;
+  // `text` defaults to the input's value; the initial query passes its own.
+  const handleSendMessage = async (text: string = newMessage) => {
+    if (!text.trim() && !image) return;
 
     // Clear previous cart operation notifications for new message
     shownCartOperations.current.clear();
@@ -196,8 +207,8 @@ const Chatbox: React.FC = () => {
       };
 
       // Add user message
-      if (newMessage) {
-        addMessage("user", newMessage, "");
+      if (text) {
+        addMessage("user", text, "");
       }
       if (image) {
         addMessage("user_image", previewImage, "");
@@ -210,7 +221,7 @@ const Chatbox: React.FC = () => {
       // Prepare API request
       const payload = {
         user_id: userId,
-        query: newMessage,
+        query: text,
         guardrails: isGuardrailsOn,
         image: image || "",
         image_bool: !!image
@@ -352,7 +363,7 @@ const Chatbox: React.FC = () => {
     // Add welcome messages
     addMessage(
       "system",
-      "You are a robotics buying advisor on RobotEshop. You help people choose programmable educational and industrial robots, explain technical specifications in plain language, and compare prices across verified sellers. Use emojis but do not use too many. Structure your output using Markdown but do not use nested indentations.",
+      `You are a robotics buying advisor on ${config.ui.brand}. You help people choose programmable educational and industrial robots, explain technical specifications in plain language, and compare prices across verified sellers. Use emojis but do not use too many. Structure your output using Markdown but do not use nested indentations.`,
       ""
     );
     
@@ -392,7 +403,9 @@ const Chatbox: React.FC = () => {
 
   useEffect(() => {
     if (hasBeenOpened) {
-      handleReset();
+      handleReset().then(() => {
+        if (initialQuery) handleSendMessage(initialQuery);
+      });
     }
   }, [hasBeenOpened]);
 
@@ -402,6 +415,7 @@ const Chatbox: React.FC = () => {
         <div className={`chatbox__support ${isOpen ? "chatbox--active" : ""}`}>
           {/* Header */}
           <div className="chatbox__header">
+            <Mark width={16} className="chatbox__mark" />
             <h4 className="chatbox__heading--header">
               {config.ui.assistantName}
             </h4>
@@ -461,7 +475,7 @@ const Chatbox: React.FC = () => {
             <div className="button-class">
               <SendIcon
                 sx={{ color: isLoading ? "#c9c9c9" : "#171717", cursor: isLoading ? "not-allowed" : "pointer" }}
-                onClick={isLoading ? () => {} : handleSendMessage}
+                onClick={isLoading ? () => {} : () => handleSendMessage()}
                 fontSize="large"
               />
             </div>

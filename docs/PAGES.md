@@ -60,7 +60,7 @@ Add `react-router-dom` and route only that pane.
 | 6. Price history | Medium | ❌ No | 1 price point per product; needs repeat crawls |
 | 7. Tutorials / learn | **High** | ✅ **Built** | 89 real tutorials — 87 indexed from RobotShop Community via the Internet Archive, plus curated pages from The Construct and RoboDK fetched live; 68 carry a parts list priced from the catalogue |
 | 8. Seller profiles | Low | ❌ No | `seller_verified` null across all 3,269 |
-| 9. Community reviews | **High** | ✅ **Built** | Needs no scraped data — the content is written by readers. Writing needs a Supabase account (email + password); the reviews themselves are still in `localStorage` behind an async store, and moving them to Supabase is the next spec |
+| 9. Community reviews | **High** | ✅ **Built** | Needs no scraped data — the content is written by readers. Reviews, replies and helpful votes are rows in Supabase, readable by anyone; writing needs an account, and rows are signed and owned by it |
 
 ---
 
@@ -197,16 +197,19 @@ Every review is pinned to a catalogue product through the typeahead over
 survive a re-crawl, so a review holding only an id would lose its subject.
 
 **Storage is the seam.** `ui/src/data/reviewStore.ts` is the only file that
-knows about `localStorage`, and every function is already `async`, so Supabase
-is a rewrite of that file alone. Its header comment carries the target table.
+knows reviews are Supabase rows. The move from `localStorage` was a rewrite of
+that file plus the two facts that used to be device-local (voted, written
+here), which became facts about the account: a `review_votes` table and an
+`author_id` column. Schema, triggers and policies:
+[superpowers/specs/2026-09-19-community-supabase-design.md](superpowers/specs/2026-09-19-community-supabase-design.md).
 
-Two things worth doing next, both cheap now the page exists:
+Two things worth doing next, both cheap now the rows are shared:
 
 - **Reviews on the product detail page.** Detail is step 3 above; the store
   already keys reviews by product, so the ratings summary is a filter away.
-- **A rating column in the catalogue.** Once reviews are shared rather than
-  device-local, `sort=rating-desc` belongs beside the price sorts in
-  `buildCatalog()`.
+- **A rating column in the catalogue.** `sort=rating-desc` belongs beside the
+  price sorts in `buildCatalog()`; the mock server would read the aggregate
+  from Supabase at boot, or the catalogue would move there first.
 
 ## Half wired: chat ↔ filters
 

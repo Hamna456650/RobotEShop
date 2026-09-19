@@ -221,6 +221,7 @@ them. It was moved off Create React App in September 2026; the design record is
 | `/community` | `src/app/community/page.tsx` | Community reviews — tag a catalogue product, score it, say what board you tested it on |
 | `/assistant` | `src/app/assistant/page.tsx` | The original chat-led screen: full-height panel beside the splash image |
 | `/auth/login`, `/auth/sign-up`, `/auth/forgot-password`, `/auth/update-password`, `/auth/error` | `src/app/auth/*/page.tsx` | Accounts — email + password on Supabase Auth, one centred card each. `/auth/confirm` is a route handler that turns an email link into a session |
+| any unmatched URL, any page that throws | `src/app/not-found.tsx`, `src/app/error.tsx` | The status pages: both render `components/status/StatusPage` inside the layout, so the navbar stays. The 404 names the path that failed; the error page offers `reset()` and shows the digest. No `global-error.tsx` on purpose. Record: [docs/superpowers/specs/2026-09-19-status-pages-design.md](docs/superpowers/specs/2026-09-19-status-pages-design.md) |
 
 `src/app/layout.tsx` is the only server component: the document shell, fonts,
 `Navbar`, and `src/app/providers.tsx` (`AuthProvider`, the toast outlet, and
@@ -269,7 +270,7 @@ Things that are easy to break:
 - **Every page is statically prerendered at build time**, which means the
   first render runs in Node. Reading `window`/`localStorage` during render
   breaks the build or causes a hydration mismatch — read them in effects, as
-  `reviewStore.ts` callers already do. Anything calling `useSearchParams` must
+  the data hooks already do. Anything calling `useSearchParams` must
   sit under a `<Suspense>` boundary (`CatalogScreen.tsx` provides it).
 
 - **Filter state lives entirely in the query string**, so a filtered view is a
@@ -284,6 +285,11 @@ Things that are easy to break:
   values measured off thepihut.com at a 1440px viewport. They are a reference to
   match, not arbitrary numbers. Two deliberate departures from DESIGN.md live
   there and are annotated inline.
+- **The logo is one component.** [ui/src/components/Mark.tsx](ui/src/components/Mark.tsx)
+  holds the geometry; the navbar, footer, chat header and launcher render it
+  in `currentColor`. `public/logo.svg`, `public/advisor.svg` and the
+  `app/icon.*` tab icons copy the same numbers by hand, so a change to the
+  shape is five files (DESIGN.md §10, *The mark*).
 - **Brand name, assistant name, categories, API base URL, and feature flags** are
   all in [ui/src/config/config.ts](ui/src/config/config.ts). Change them there and
   nowhere else. The navbar categories mirror the scraper's taxonomy in `enrich.py`.
@@ -315,13 +321,17 @@ Things that are easy to break:
   three microcontrollers names all three, and a total that sums them describes
   a purchase nobody would make. Do not tighten it back up.
 - **[ui/src/data/reviewStore.ts](ui/src/data/reviewStore.ts) is the only file that
-  knows community reviews live in `localStorage`.** Every function is `async`
-  even though nothing awaits, so the move to Supabase rewrites that one file and
-  no caller changes shape; the target table is written out in its header
-  comment. Two things stay device-local for now — which reviews this browser
-  voted helpful, and which it wrote ("your own" still means "written here"
-  until ownership moves to row-level security with the reviews themselves).
-  The tagged product is **denormalised into every review on
+  knows community reviews are Supabase rows** (`reviews`, `review_replies`,
+  `review_votes`; schema and policies in
+  [docs/superpowers/specs/2026-09-19-community-supabase-design.md](docs/superpowers/specs/2026-09-19-community-supabase-design.md)).
+  The client never sends `author` or `author_id`: a `before insert` trigger
+  stamps both from the session, and a trigger on `review_votes` maintains
+  `reviews.helpful`, so a vote is one insert and the `(review_id, user_id)`
+  primary key makes it one per account. "Yours" is `authorId === user.id`,
+  the same rule RLS applies on delete. Nothing under `/community` reads
+  `localStorage` any more; the old `servo.community.*` keys are dead. Every
+  write throws a sentence the page shows as a toast, and the forms keep their
+  text on failure. The tagged product is **denormalised into every review on
   purpose**: product ids are not stable across crawls, so a review holding only
   an id would lose its subject the first time the scraper ran.
 - **The community page shares no code with tutorials.** `CommunityRail` is a
@@ -369,7 +379,7 @@ the crawl covers a limited set of stores instead of returning an empty result;
 only 62 products are listed on more than one site, so most comparisons are
 spec-vs-spec rather than price-vs-price; price history needs repeat crawls before
 it shows anything. When adding a feature, follow the same rule — an empty state
-names what happened and what to do next (DESIGN.md §8).
+names what happened and what to do next (DESIGN.md §10, Voice).
 
 The tutorial library follows it too, and the numbers are worth knowing before
 you "fix" one of them:
