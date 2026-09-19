@@ -1,32 +1,42 @@
 {
-    "compilerOptions": {
-      "outDir": "./.next/",
-      "noImplicitAny": true,
-      "module": "esnext",
-      "target": "es5",
-      "jsx": "preserve",
-      "allowJs": true, // This allows JavaScript files to be compiled.
-      "strict": true // Enable all strict type-checking options.
-      ,
-      "lib": [
-        "dom",
-        "dom.iterable",
-        "esnext"
-      ],
-      "skipLibCheck": true,
-      "noEmit": true,
-      "incremental": true,
-      "esModuleInterop": true,
-      "moduleResolution": "node",
-      "resolveJsonModule": true,
-      "isolatedModules": true
-    },
-    "include": [
-      "./src/components/chatbox",
-      "./src/components",
-      "./src"
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
     ],
-    "exclude": [
-      "node_modules"
-    ]
-  }
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

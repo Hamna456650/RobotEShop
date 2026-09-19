@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Catalogue page — the browse surface for the 2,880 scraped products, which
  * until now were reachable only by asking the assistant for them.
@@ -8,7 +10,8 @@
  */
 
 import React, { useMemo } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams, useParams } from "next/navigation";
 
 import FilterSidebar from "./FilterSidebar";
 import ProductCard from "./ProductCard";
@@ -55,10 +58,21 @@ function pageWindow(current: number, count: number): (number | "gap")[] {
 }
 
 const Catalog: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
   const { category: categorySlug } = useParams<{ category?: string }>();
 
-  // A /catalog/:category route is just a preset category filter. Resolving it
+  // react-router's setSearchParams, spelled out: push a history entry for the
+  // same path with the new query string. `scroll: false` because the
+  // catalogue scrolls inside its own `.catalog` container, not the window,
+  // and goToPage handles that itself.
+  const setSearchParams = (params: URLSearchParams) => {
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  // A /catalog/[category] route is just a preset category filter. Resolving it
   // into the query string here means the sidebar, the heading and the fetch all
   // read from one place.
   const effectiveSearch = useMemo(() => {
@@ -123,7 +137,7 @@ const Catalog: React.FC = () => {
       else params.set("sort", value);
     });
 
-  // Built from searchParams, not effectiveSearch: on a /catalog/:category route
+  // Built from searchParams, not effectiveSearch: on a /catalog/[category] route
   // the category is already carried by the path, and folding it into the query
   // string as well would leave a redundant ?category= on every page link.
   const goToPage = (next: number) => {
@@ -147,7 +161,7 @@ const Catalog: React.FC = () => {
     <div className="catalog">
       <div className="catalog__inner">
         <nav className="catalog__breadcrumb">
-          <Link to="/">Home</Link> / <span>{heading}</span>
+          <Link href="/">Home</Link> / <span>{heading}</span>
         </nav>
 
         <div className="catalog__columns">

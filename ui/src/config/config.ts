@@ -43,8 +43,10 @@ export interface AppConfig {
 
 // Get configuration based on environment
 const getConfig = (): AppConfig => {
-  // Default to nginx proxy routing, but allow local development to target chain-server directly.
-  const baseUrl = process.env.REACT_APP_API_BASE_URL || '/api';
+  // Default to nginx proxy routing, but allow local development to target the
+  // mock server directly. NEXT_PUBLIC_ is what lets Next inline it into the
+  // browser bundle; set it in ui/.env (see .env.example).
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
 
   return {
     api: {

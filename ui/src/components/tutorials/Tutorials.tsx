@@ -19,6 +19,8 @@
  * original, and the byline is on every card.
  */
 
+'use client';
+
 import React, { useMemo, useState } from 'react';
 
 import { Tutorial } from '../../types';

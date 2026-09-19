@@ -23,7 +23,8 @@ RUN apt install -y \
     curl \
     software-properties-common
 
-RUN curl -sL https://deb.nodesource.com/setup_21.x | bash -
+# Next 16 needs Node 20.9 or later.
+RUN curl -sL https://deb.nodesource.com/setup_22.x | bash -
 RUN apt install -y nodejs
 
 WORKDIR /app
@@ -33,4 +34,6 @@ RUN rm -rf /app/public/images && ln -s /app/shared/images /app/public/images
 
 RUN npm install
 
+# `start` is the dev server, as it was under Create React App. For a
+# production image run `npm run build` here and change this to `npm run serve`.
 CMD ["npm", "run", "start"]

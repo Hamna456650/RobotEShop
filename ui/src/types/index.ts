@@ -53,22 +53,14 @@ export interface RobotCard {
   sellers: RobotSeller[];
 }
 
-export interface RobotRowContent extends Array<RobotCard> {}
+export type RobotRowContent = RobotCard[];
 
 export interface ImageContent {
   productUrl: string;
   productName: string;
 }
 
-export interface ImageRowContent extends Array<ImageContent> {}
-
-export interface ChatboxProps {
-  setNewRenderImage: (value: string) => void;
-}
-
-export interface ApparelProps {
-  newRenderImage: string;
-}
+export type ImageRowContent = ImageContent[];
 
 export interface SafeHTMLProps {
   html: string;

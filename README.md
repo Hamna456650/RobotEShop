@@ -36,7 +36,8 @@ npm start
 
 Then open <http://localhost:3000>.
 
-First-time only, install the UI dependencies with `cd ui && npm ci`.
+First-time only: `cd ui && npm ci && cp .env.example .env`. The UI is a
+Next.js app and needs Node 20.9 or later.
 
 ## What works
 
@@ -144,14 +145,16 @@ for, so nothing is lost by following the house rule there.
 ## Layout
 
 ```
-ui/                    React 18 + TypeScript + Tailwind + MUI (Create React App)
+ui/                    Next.js 16 + React 19 + TypeScript + Tailwind (MUI icons only)
+  src/app/             One folder per route: layout, /, /catalog, /catalog/[category],
+                       /tutorials, /community, /assistant
   src/components/      Navbar, Apparel (splash image), chatbox/
   src/components/catalog/  Catalog, FilterSidebar, ProductCard, ChatWidget
   src/hooks/useCatalog.ts  Fetches GET /catalog for the current query string
   src/catalog.css      Catalogue styling, with the measured values marked [ref]
   src/config/config.ts API base URL, categories, feature flags
   public/images/robots/ 36 generated placeholder SVGs
-  .env                 Points the UI at the mock server
+  .env                 Points the UI at the mock server (copy from .env.example)
 mock-server/
   server.js            Dependency-free stand-in for the chain server
   robots.json          36-robot catalogue with specs, sellers, tutorials

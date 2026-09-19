@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+"use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import SendIcon from "@mui/icons-material/Send";
@@ -24,15 +26,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 
 import ChatMessage from "./ChatMessage";
-import { ChatboxProps } from "../../types";
 import { config } from "../../config/config";
+import { useRenderImage } from "../../context/RenderImageContext";
 import { showCartNotification } from "../../utils";
 
 /**
  * Main chatbox component for the shopping assistant
  */
 
-const Chatbox: React.FC<ChatboxProps> = ({ setNewRenderImage }) => {
+const Chatbox: React.FC = () => {
+  const { setNewRenderImage } = useRenderImage();
   const [isOpen, setIsOpen] = useState<boolean>(true);
   const [hasBeenOpened, setHasBeenOpened] = useState<boolean>(false);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -245,7 +248,7 @@ const Chatbox: React.FC<ChatboxProps> = ({ setNewRenderImage }) => {
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split('\n').filter(line => line.startsWith('data:'));
 
-        for (let line of lines) {
+        for (const line of lines) {
           const raw = line.replace(/^data:\s*/, '');
           
           if (raw === '[DONE]') {

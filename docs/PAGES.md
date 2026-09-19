@@ -6,10 +6,15 @@ can actually support today. Measured on `scraper/data/robots.json`:
 
 ---
 
-> **Status, August 2026.** Steps 1 and 2 below are built. `react-router-dom` is
-> in, and the catalogue lives at `/` and `/catalog/:category` with a faceted
-> sidebar over `GET /catalog`. Category pages (step 4) came free with it — the
-> navbar strip's dead `#` links now route.
+> **Status, August 2026.** Steps 1 and 2 below are built. The catalogue lives
+> at `/`, `/catalog` and `/catalog/[category]` with a faceted sidebar over
+> `GET /catalog`. Category pages (step 4) came free with it — the navbar
+> strip's dead `#` links now route.
+>
+> **September 2026.** The UI moved from Create React App + `react-router-dom`
+> to Next.js 16's App Router; routes are now folders under `ui/src/app/`.
+> Nothing below changes in substance — a product-detail page is
+> `src/app/catalog/[category]/[slug]/page.tsx` when it comes.
 >
 > **The recommendation below was not followed.** Option A put the catalogue in
 > the left pane; the catalogue was instead built full-width with the assistant

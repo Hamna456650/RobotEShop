@@ -1,6 +1,8 @@
 # Shopping Assistant UI
 
-A modern React TypeScript application for the NVIDIA Shopping Assistant demo.
+The Servo front end: a Next.js 16 (App Router) + React 19 + TypeScript
+application, originally NVIDIA's Retail Shopping Assistant demo UI and moved
+off Create React App in September 2026.
 
 ## Overview
 
@@ -12,6 +14,17 @@ This UI provides a clean, responsive interface for interacting with the AI-power
 
 ```
 src/
+├── app/
+│   ├── layout.tsx               # Document shell, fonts, Navbar, providers
+│   ├── providers.tsx            # Toast outlet + RenderImageContext (client)
+│   ├── page.tsx                 # /            catalogue
+│   ├── catalog/page.tsx         # /catalog     catalogue
+│   ├── catalog/[category]/      # /catalog/sensors etc.
+│   ├── tutorials/page.tsx
+│   ├── community/page.tsx
+│   └── assistant/page.tsx       # the chat-led screen
+├── context/
+│   └── RenderImageContext.tsx   # image shared between chat surfaces and /assistant
 ├── components/
 │   ├── chatbox/
 │   │   ├── ChatMessage.tsx      # Individual message display
@@ -46,34 +59,40 @@ src/
 
 ### Prerequisites
 
-- Node.js 16+
-- npm or yarn
+- Node.js 20.9+
+- npm
 
 ### Setup
 
 1. Install dependencies:
    ```bash
-   npm install
+   npm ci
    ```
 
-2. Start development server:
+2. Point it at the mock server (the default `/api` is the Docker nginx proxy):
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Start the development server:
    ```bash
    npm start
    ```
 
-3. Build for production:
+4. Build for production:
    ```bash
-   npm run build
+   npm run build && npm run serve
    ```
 
 ### Available Scripts
 
-- `npm start` - Start development server
-- `npm run build` - Build for production
-- `npm test` - Run tests
-- `npm run lint` - Run ESLint
+- `npm start` / `npm run dev` - Start the Next.js development server
+- `npm run build` - Production build (`next build`)
+- `npm run serve` - Serve the production build (`next start`)
+- `npm run lint` - Run ESLint (`eslint-config-next`)
 - `npm run lint:fix` - Fix ESLint issues
 - `npm run format` - Format code with Prettier
+- `npx tsc --noEmit` - Type check
 
 ## Configuration
 
@@ -126,11 +145,9 @@ The application uses:
 
 ## Testing
 
-The application includes:
-- Unit tests for utility functions
-- Component testing with React Testing Library
-- Integration tests for API communication
-- E2E tests for critical user flows
+There are no UI tests. The bar is `npx tsc --noEmit`, a clean `npm run build`,
+`npm run lint` with no errors, and a clean browser console against the running
+mock server.
 
 ## Deployment
 

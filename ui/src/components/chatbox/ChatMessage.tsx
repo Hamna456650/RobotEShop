@@ -82,7 +82,7 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
       }
 
       // Preprocess to convert list markers at the beginning of lines
-      let preprocessedContent = (content as string)
+      const preprocessedContent = (content as string)
         .replace(/^\* /gm, '• ')           // Convert * to bullet
         .replace(/^- /gm, '• ')             // Convert - to bullet
         .replace(/^\d+\. /gm, (match) => { // Keep numbered lists as-is

@@ -9,17 +9,15 @@
  * the conversation in local state — unmounting would silently discard it.
  */
 
+"use client";
+
 import React, { useState } from "react";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
 
 import Chatbox from "../chatbox/chatbox";
 
-interface ChatWidgetProps {
-  setNewRenderImage: (value: string) => void;
-}
-
-const ChatWidget: React.FC<ChatWidgetProps> = ({ setNewRenderImage }) => {
+const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
 
@@ -32,7 +30,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ setNewRenderImage }) => {
     <>
       {hasOpened && (
         <div className={`chat-widget${isOpen ? " chat-widget--open" : ""}`}>
-          <Chatbox setNewRenderImage={setNewRenderImage} />
+          <Chatbox />
         </div>
       )}
 

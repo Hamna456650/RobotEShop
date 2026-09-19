@@ -168,7 +168,7 @@ export const useChat = (setNewRenderImage: (value: string) => void): UseChatRetu
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split('\n').filter(line => line.startsWith('data:'));
 
-        for (let line of lines) {
+        for (const line of lines) {
           const raw = line.replace(/^data:\s*/, '');
           const parsedChunk = parseStreamingChunk(raw);
           

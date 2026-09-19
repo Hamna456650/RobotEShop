@@ -32,11 +32,13 @@ actually renders, not aspirational.
 ## Commands
 
 ```bash
-# UI — port 3000
+# UI — port 3000. Next.js 16 (App Router); needs Node 20.9+ and ui/.env
+# (copy ui/.env.example) so it talks to the mock server instead of /api.
 cd ui && npm ci              # first time only
-npm start
-npm run build
-npm run lint                 # eslint src --ext .ts,.tsx
+npm start                    # next dev
+npm run build                # next build — also the strictest check we have
+npm run serve                # next start, after a build
+npm run lint                 # eslint src (eslint-config-next)
 npm run lint:fix
 npm run format               # prettier
 npx tsc --noEmit             # the type check used to verify UI changes
@@ -66,8 +68,11 @@ python -m pytest tests/test_tutorials.py -q               # the tutorial pipelin
 python -m pytest tests/test_enrich.py::test_name -q       # one test
 ```
 
-There are no UI tests. `npm test` (react-scripts) is wired up but no `.test.tsx`
-files exist; `npx tsc --noEmit` plus a clean console is the current bar.
+There are no UI tests. `npx tsc --noEmit`, a clean `npm run build`, `npm run
+lint` with no errors, and a clean browser console are the current bar. Lint
+reports ~40 warnings in the upstream NVIDIA chat code (`any` payloads, setState
+in fetch effects); those rules are set to `warn` in `eslint.config.mjs` on
+purpose — do not add to them, and do not silence them.
 
 ## Architecture
 
@@ -197,19 +202,35 @@ treats a converted total as accurate.
 
 ### UI
 
-React 18 + TypeScript + Tailwind + MUI on Create React App. The code is NVIDIA's
+Next.js 16 (App Router) + React 19 + TypeScript + Tailwind, with MUI used
+for its icons only. The code is NVIDIA's
 [Retail Shopping Assistant](https://github.com/NVIDIA-AI-Blueprints/retail-shopping-assistant)
-blueprint UI under Apache 2.0 — keep the SPDX headers on the files that carry them.
+blueprint UI under Apache 2.0 — keep the SPDX headers on the files that carry
+them. It was moved off Create React App in September 2026; the design record is
+[docs/superpowers/specs/2026-09-19-nextjs-migration-design.md](docs/superpowers/specs/2026-09-19-nextjs-migration-design.md).
 
-| Route | Screen |
-|---|---|
-| `/` | Catalogue, unfiltered — the front door |
-| `/catalog/:category` | Catalogue with a category preset; the navbar strip links here |
-| `/tutorials` | Tutorials |
-| `/community` | Community reviews — tag a catalogue product, score it, say what board you tested it on |
-| `/assistant` | The original chat-led screen: full-height panel beside the splash image |
+| Route | File | Screen |
+|---|---|---|
+| `/` | `src/app/page.tsx` | Catalogue, unfiltered — the front door |
+| `/catalog` | `src/app/catalog/page.tsx` | The same page, so the URL says what it is |
+| `/catalog/[category]` | `src/app/catalog/[category]/page.tsx` | Catalogue with a category preset; the navbar strip links here |
+| `/tutorials` | `src/app/tutorials/page.tsx` | Tutorials |
+| `/community` | `src/app/community/page.tsx` | Community reviews — tag a catalogue product, score it, say what board you tested it on |
+| `/assistant` | `src/app/assistant/page.tsx` | The original chat-led screen: full-height panel beside the splash image |
+
+`src/app/layout.tsx` is the only server component: the document shell, fonts,
+`Navbar`, and `src/app/providers.tsx` (toast outlet plus the
+`RenderImageContext` that lets either chat surface set the image `/assistant`
+displays). Every page file and everything under `components/` is `"use
+client"`; the app is client-rendered exactly as it was, just served by Next.
 
 Things that are easy to break:
+
+- **Every page is statically prerendered at build time**, which means the
+  first render runs in Node. Reading `window`/`localStorage` during render
+  breaks the build or causes a hydration mismatch — read them in effects, as
+  `reviewStore.ts` callers already do. Anything calling `useSearchParams` must
+  sit under a `<Suspense>` boundary (`CatalogScreen.tsx` provides it).
 
 - **Filter state lives entirely in the query string**, so a filtered view is a
   shareable link and the back button works. Keep it there —
@@ -226,6 +247,9 @@ Things that are easy to break:
 - **Brand name, assistant name, categories, API base URL, and feature flags** are
   all in [ui/src/config/config.ts](ui/src/config/config.ts). Change them there and
   nowhere else. The navbar categories mirror the scraper's taxonomy in `enrich.py`.
+  The API base URL comes from `NEXT_PUBLIC_API_BASE_URL` in `ui/.env`
+  (gitignored; copy `.env.example`) and falls back to `/api` for the Docker
+  nginx proxy.
 - **Tutorials are real and are not ours.** The page fetches `GET /tutorials` via
   [ui/src/hooks/useTutorials.ts](ui/src/hooks/useTutorials.ts); the old
   hand-written `ui/src/data/tutorials.ts` is gone. Every tutorial was written by

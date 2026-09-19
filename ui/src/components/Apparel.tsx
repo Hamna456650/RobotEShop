@@ -15,15 +15,18 @@
  * limitations under the License.
  */
 
+"use client";
+
 /**
  * Apparel/Product display component
  */
 
 import React from "react";
-import { ApparelProps } from "../types";
 import { getDefaultImage } from "../config/config";
+import { useRenderImage } from "../context/RenderImageContext";
 
-const Apparel: React.FC<ApparelProps> = ({ newRenderImage }) => {
+const Apparel: React.FC = () => {
+  const { newRenderImage } = useRenderImage();
   const displayImage = newRenderImage || getDefaultImage();
 
   return (

@@ -20,6 +20,8 @@
  * nothing in this file.
  */
 
+"use client";
+
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -502,7 +504,7 @@ const Community: React.FC = () => {
                   <p>
                     The catalogue can tell you what a part costs and who stocks
                     it. It cannot tell you that the cheap ultrasonic module
-                    needs a pull-up, or that one seller's batch arrives dead.
+                    needs a pull-up, or that one seller&rsquo;s batch arrives dead.
                     That is what this page is for.
                   </p>
                   <p>
