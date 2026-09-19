@@ -30,6 +30,10 @@ scraper/.cache/
 # optimisation, rebuilt by `python run_tutorials.py`.
 scraper/.cache_tutorials/
 
+# SerpAPI results for the assistant's find_video_tutorials tool. A cost
+# optimisation (SerpAPI bills per search), rebuilt on demand.
+ui/.cache/
+
 # --- local config -----------------------------------------------------------
 .env
 .env.local
