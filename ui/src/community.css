@@ -272,6 +272,10 @@
   padding: 10px 20px;
   cursor: pointer;
   transition: filter 0.15s ease;
+  /* Also worn by a next/link when the action is "go sign in". */
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
 }
 
 /* The hero's copy of the button, sized to the band rather than to a page that
@@ -1264,15 +1268,6 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-}
-
-/* The name is asked for once per browser and remembered, so it is a small box
-   at the end of the row rather than a labelled field above the message. */
-.com-replyform__name {
-  flex: 0 1 180px;
-  min-width: 120px;
-  font-size: 13px;
-  padding: 7px 11px;
 }
 
 .com-replyform__actions {

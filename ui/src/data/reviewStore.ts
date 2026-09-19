@@ -40,9 +40,10 @@
  *
  * Two things stay on the device even then, because they are facts about this
  * browser rather than about the review: which reviews this visitor has voted
- * helpful, and which ones they wrote. `helpful` itself becomes an RPC so the
- * count is a server-side increment rather than a read-modify-write that two
- * open tabs can lose.
+ * helpful, and which ones they wrote. (The author's name used to be a third;
+ * it now comes from the signed-in account — see context/AuthContext.)
+ * `helpful` itself becomes an RPC so the count is a server-side increment
+ * rather than a read-modify-write that two open tabs can lose.
  */
 
 import { Reply, ReplyDraft, ReplyIndex, Review, ReviewDraft } from "../types/community";
@@ -51,7 +52,6 @@ const REVIEWS_KEY = "servo.community.reviews.v1";
 const REPLIES_KEY = "servo.community.replies.v1";
 const VOTED_KEY = "servo.community.voted.v1";
 const AUTHORED_KEY = "servo.community.authored.v1";
-const NAME_KEY = "servo.community.name.v1";
 
 /**
  * Reading `localStorage` throws outright in some privacy modes rather than
@@ -101,8 +101,6 @@ export async function addReview(draft: ReviewDraft): Promise<Review> {
   const all = read<Review[]>(REVIEWS_KEY, []);
   write(REVIEWS_KEY, [review, ...all]);
   write(AUTHORED_KEY, [review.id, ...read<string[]>(AUTHORED_KEY, [])]);
-  // Remembered so the composer does not ask for a name that was given once.
-  write(NAME_KEY, draft.author);
 
   return review;
 }
@@ -182,8 +180,6 @@ export async function addReply(draft: ReplyDraft): Promise<ReplyIndex> {
 
   write(REPLIES_KEY, [...read<Reply[]>(REPLIES_KEY, []), reply]);
   write(AUTHORED_KEY, [reply.id, ...read<string[]>(AUTHORED_KEY, [])]);
-  // Same name box as the review composer, so it is asked for once per browser.
-  write(NAME_KEY, draft.author);
 
   return listReplies();
 }
@@ -210,8 +206,4 @@ export function hasVoted(id: string): boolean {
 /** True for a review *or* a reply written from this browser — ids are unique. */
 export function isOwn(id: string): boolean {
   return read<string[]>(AUTHORED_KEY, []).includes(id);
-}
-
-export function rememberedName(): string {
-  return read<string>(NAME_KEY, "");
 }

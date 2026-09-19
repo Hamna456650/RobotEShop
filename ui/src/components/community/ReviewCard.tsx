@@ -23,6 +23,8 @@ interface ReviewCardProps {
   voted: boolean;
   /** This browser wrote it, so it may take it back. */
   own: boolean;
+  /** Signed in. Voting is writing, and writing needs an account. */
+  canVote: boolean;
   /** Replies on this review's thread, for the toggle's count. */
   replyCount: number;
   /** This card's thread is the open one. At most one is, page-wide. */
@@ -38,6 +40,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   review,
   voted,
   own,
+  canVote,
   replyCount,
   threadOpen,
   thread,
@@ -157,8 +160,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               type="button"
               className={"com-helpful" + (voted ? " com-helpful--on" : "")}
               onClick={() => onHelpful(review.id)}
-              disabled={voted}
+              disabled={voted || !canVote}
               aria-pressed={voted}
+              title={canVote ? undefined : "Sign in to mark reviews helpful"}
             >
               {voted ? "Marked helpful" : "Helpful"}
               {review.helpful > 0 && (

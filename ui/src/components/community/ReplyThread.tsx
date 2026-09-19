@@ -13,6 +13,7 @@
  * a mis-click on another card would be the page punishing you for its own rule.
  */
 
+import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 
 import { Reply, ReplyDraft } from "../../types/community";
@@ -29,8 +30,10 @@ interface ReplyThreadProps {
   replies: Reply[];
   /** Ids written from this browser, so they can be taken back. */
   ownIds: Set<string>;
-  /** Prefilled from the last thing written on this device. */
-  initialAuthor: string;
+  /** The signed-in account's display name. Replies are signed with it. */
+  author: string;
+  /** False while signed out: the thread reads, but the box is a sign-in link. */
+  canWrite: boolean;
   /** Draft text, held by the page so it survives the thread being closed. */
   draft: string;
   onDraftChange: (reviewId: string, text: string) => void;
@@ -43,24 +46,24 @@ const ReplyThread: React.FC<ReplyThreadProps> = ({
   reviewId,
   replies,
   ownIds,
-  initialAuthor,
+  author,
+  canWrite,
   draft,
   onDraftChange,
   onSubmit,
   onDelete,
   onClose,
 }) => {
-  const [author, setAuthor] = useState(initialAuthor);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const boxRef = useRef<HTMLTextAreaElement>(null);
 
   // Opening a thread is an intent to read it or write in it, so the caret is
   // already in the box. There is only ever one open, so this cannot fight
-  // another thread for focus.
+  // another thread for focus. Signed out there is no box to focus.
   useEffect(() => {
-    boxRef.current?.focus({ preventScroll: true });
-  }, []);
+    if (canWrite) boxRef.current?.focus({ preventScroll: true });
+  }, [canWrite]);
 
   /** Addressing someone keeps the thread flat: a mention, not a sub-thread. */
   const mention = (name: string) => {
@@ -78,15 +81,11 @@ const ReplyThread: React.FC<ReplyThreadProps> = ({
       boxRef.current?.focus();
       return;
     }
-    if (author.trim().length < 2) {
-      setError("Add a name to sign it with.");
-      return;
-    }
 
     setError(null);
     setIsSaving(true);
     try {
-      await onSubmit({ reviewId, body, author: author.trim() });
+      await onSubmit({ reviewId, body, author });
       onDraftChange(reviewId, "");
     } finally {
       setIsSaving(false);
@@ -143,57 +142,71 @@ const ReplyThread: React.FC<ReplyThreadProps> = ({
         </p>
       )}
 
-      <form className="com-replyform" onSubmit={handleSubmit} noValidate>
-        <textarea
-          ref={boxRef}
-          className="com-input com-replyform__box"
-          value={draft}
-          maxLength={BODY_MAX}
-          rows={2}
-          placeholder="Add to this thread"
-          aria-label="Your reply"
-          aria-invalid={Boolean(error)}
-          onChange={(event) => {
-            onDraftChange(reviewId, event.target.value);
-            if (error) setError(null);
-          }}
-        />
-
-        <div className="com-replyform__foot">
-          <input
-            className="com-input com-replyform__name"
-            value={author}
-            maxLength={40}
-            placeholder="Your name"
-            aria-label="Your name"
-            onChange={(event) => setAuthor(event.target.value)}
+      {canWrite ? (
+        <form className="com-replyform" onSubmit={handleSubmit} noValidate>
+          <textarea
+            ref={boxRef}
+            className="com-input com-replyform__box"
+            value={draft}
+            maxLength={BODY_MAX}
+            rows={2}
+            placeholder="Add to this thread"
+            aria-label="Your reply"
+            aria-invalid={Boolean(error)}
+            onChange={(event) => {
+              onDraftChange(reviewId, event.target.value);
+              if (error) setError(null);
+            }}
           />
 
-          <div className="com-replyform__actions">
-            {/* Only shown once it could matter, rather than counting from 600
-                the moment the box is empty. */}
-            {remaining <= 100 && (
-              <span className="com-counter">{remaining} left</span>
-            )}
-            <button
-              type="button"
-              className="com-linkbutton com-linkbutton--quiet"
-              onClick={onClose}
-            >
-              Close
-            </button>
-            <button
-              type="submit"
-              className="com-button com-button--compact"
-              disabled={isSaving}
-            >
-              {isSaving ? "Posting…" : "Post reply"}
-            </button>
-          </div>
-        </div>
+          <div className="com-replyform__foot">
+            <p className="com-hint">
+              Posting as <b>{author}</b>
+            </p>
 
-        {error && <p className="com-error">{error}</p>}
-      </form>
+            <div className="com-replyform__actions">
+              {/* Only shown once it could matter, rather than counting from 600
+                  the moment the box is empty. */}
+              {remaining <= 100 && (
+                <span className="com-counter">{remaining} left</span>
+              )}
+              <button
+                type="button"
+                className="com-linkbutton com-linkbutton--quiet"
+                onClick={onClose}
+              >
+                Close
+              </button>
+              <button
+                type="submit"
+                className="com-button com-button--compact"
+                disabled={isSaving}
+              >
+                {isSaving ? "Posting…" : "Post reply"}
+              </button>
+            </div>
+          </div>
+
+          {error && <p className="com-error">{error}</p>}
+        </form>
+      ) : (
+        /* Reading is open to everyone; adding to the thread is not. The link
+           carries the page so sign-in comes straight back here. */
+        <div className="com-replyform__foot">
+          <p className="com-hint">
+            <Link className="com-linkbutton" href="/auth/login?next=/community">
+              Sign in to reply
+            </Link>
+          </p>
+          <button
+            type="button"
+            className="com-linkbutton com-linkbutton--quiet"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      )}
     </div>
   );
 };

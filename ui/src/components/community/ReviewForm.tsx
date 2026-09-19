@@ -49,8 +49,8 @@ const CONDITION_OPTIONS: { value: string; label: string }[] = [
 const BODY_MIN = 40;
 
 interface ReviewFormProps {
-  /** Prefilled from the last review written on this device. */
-  initialAuthor: string;
+  /** The signed-in account's display name. The review is signed with it. */
+  author: string;
   onSubmit: (draft: ReviewDraft) => Promise<void>;
   onCancel: () => void;
 }
@@ -60,11 +60,10 @@ interface Errors {
   rating?: string;
   title?: string;
   body?: string;
-  author?: string;
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({
-  initialAuthor,
+  author,
   onSubmit,
   onCancel,
 }) => {
@@ -75,7 +74,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const [board, setBoard] = useState("");
   const [months, setMonths] = useState("");
   const [condition, setCondition] = useState("unsaid");
-  const [author, setAuthor] = useState(initialAuthor);
 
   const [errors, setErrors] = useState<Errors>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -104,7 +102,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     if (body.trim().length < BODY_MIN) {
       found.body = `Say a little more — ${BODY_MIN} characters at least, so the next person learns something.`;
     }
-    if (author.trim().length < 2) found.author = "Add a name to sign it with.";
     return found;
   };
 
@@ -133,7 +130,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         monthsUsed: months === "" ? null : Number(months),
         arrivedWorking:
           condition === "yes" ? true : condition === "no" ? false : null,
-        author: author.trim(),
+        author,
       });
     } finally {
       setIsSaving(false);
@@ -145,8 +142,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       <div className="com-form__head">
         <h2 className="com-form__title">Write a review</h2>
         <p className="com-form__lead">
-          Say what you wired it to and how it held up. Reviews stay in this
-          browser for now — nothing is sent anywhere.
+          Say what you wired it to and how it held up. It will be signed{" "}
+          <b>{author}</b>. Reviews stay in this browser for now — nothing is
+          sent anywhere.
         </p>
       </div>
 
@@ -294,23 +292,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           </div>
         </div>
       </fieldset>
-
-      <div className="com-field">
-        <label className="com-label" htmlFor="com-author">
-          Sign it as
-        </label>
-        <input
-          id="com-author"
-          className={"com-input" + (errors.author ? " com-input--invalid" : "")}
-          type="text"
-          maxLength={40}
-          value={author}
-          aria-invalid={Boolean(errors.author) || undefined}
-          onChange={(event) => setAuthor(event.target.value)}
-          placeholder="A name or a handle"
-        />
-        {errors.author && <p className="com-error">{errors.author}</p>}
-      </div>
 
       <div className="com-form__actions">
         <button type="submit" className="com-button" disabled={isSaving}>

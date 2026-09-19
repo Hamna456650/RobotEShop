@@ -17,11 +17,13 @@
  *
  * Storage is `localStorage`, behind the async module in data/reviewStore. Every
  * call here is already awaited, so pointing that module at Supabase changes
- * nothing in this file.
+ * nothing in this file. Identity comes from `useAuth()`: writing needs an
+ * account, and the display name is what a review is signed with.
  */
 
 "use client";
 
+import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -38,11 +40,11 @@ import {
   listReplies,
   listReviews,
   hasVoted,
-  rememberedName,
   removeReply,
   removeReview,
   voteHelpful,
 } from "../../data/reviewStore";
+import { useAuth } from "../../context/AuthContext";
 import CommunityRail, { RailGroup } from "./CommunityRail";
 import ReplyThread from "./ReplyThread";
 import ReviewCard from "./ReviewCard";
@@ -119,6 +121,12 @@ const Community: React.FC = () => {
   const [voted, setVoted] = useState<Set<string>>(new Set());
   const [own, setOwn] = useState<Set<string>>(new Set());
 
+  /* Writing needs an account; reading does not. While the session is still
+     being read the write controls are disabled, not swapped for "Sign in" —
+     a signed-in reader should never see that flash. */
+  const { status, displayName } = useAuth();
+  const canWrite = status === "signed-in";
+
   const adopt = useCallback((next: Review[], threads: ReplyIndex) => {
     setReviews(next);
     setReplies(threads);
@@ -180,6 +188,7 @@ const Community: React.FC = () => {
   };
 
   const handleHelpful = async (id: string) => {
+    if (!canWrite) return;
     adopt(await voteHelpful(id), replies);
   };
 
@@ -320,10 +329,6 @@ const Community: React.FC = () => {
   const plural = (count: number, one: string, many: string) =>
     count === 1 ? one : many;
 
-  /* Read once per render rather than once per card — every thread in the feed
-     prefills from it, and it is a synchronous `localStorage` hit. */
-  const savedName = rememberedName();
-
   return (
     <main className="community">
       <div className="com-hero">
@@ -392,15 +397,31 @@ const Community: React.FC = () => {
                 />
               </div>
 
-              {!isComposing && (
-                <button
-                  type="button"
-                  className="com-button com-button--compact"
-                  onClick={() => setIsComposing(true)}
-                >
-                  Write a review
-                </button>
-              )}
+              {!isComposing &&
+                (canWrite ? (
+                  <button
+                    type="button"
+                    className="com-button com-button--compact"
+                    onClick={() => setIsComposing(true)}
+                  >
+                    Write a review
+                  </button>
+                ) : status === "signed-out" ? (
+                  <Link
+                    className="com-button com-button--compact"
+                    href="/auth/login?next=/community"
+                  >
+                    Sign in to write a review
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="com-button com-button--compact"
+                    disabled
+                  >
+                    Write a review
+                  </button>
+                ))}
             </div>
 
             <p className="com-hero__note">
@@ -429,7 +450,7 @@ const Community: React.FC = () => {
           <div>
             {isComposing && (
               <ReviewForm
-                initialAuthor={savedName}
+                author={displayName}
                 onSubmit={handleSubmit}
                 onCancel={() => setIsComposing(false)}
               />
@@ -473,6 +494,7 @@ const Community: React.FC = () => {
                     review={review}
                     voted={voted.has(review.id)}
                     own={own.has(review.id)}
+                    canVote={canWrite}
                     replyCount={(replies[review.id] || []).length}
                     threadOpen={openThread === review.id}
                     onToggleThread={handleToggleThread}
@@ -483,7 +505,8 @@ const Community: React.FC = () => {
                         reviewId={review.id}
                         replies={replies[review.id] || []}
                         ownIds={own}
-                        initialAuthor={savedName}
+                        author={displayName}
+                        canWrite={canWrite}
                         draft={drafts[review.id] || ""}
                         onDraftChange={handleDraftChange}
                         onSubmit={handleReply}
@@ -511,13 +534,19 @@ const Community: React.FC = () => {
                     Tag any of the 2,880 products, give it a score, and say what
                     you wired it to.
                   </p>
-                  <button
-                    type="button"
-                    className="com-button"
-                    onClick={() => setIsComposing(true)}
-                  >
-                    Write the first review
-                  </button>
+                  {canWrite ? (
+                    <button
+                      type="button"
+                      className="com-button"
+                      onClick={() => setIsComposing(true)}
+                    >
+                      Write the first review
+                    </button>
+                  ) : (
+                    <Link className="com-button" href="/auth/login?next=/community">
+                      Sign in to write the first review
+                    </Link>
+                  )}
                 </div>
               )
             ) : (
