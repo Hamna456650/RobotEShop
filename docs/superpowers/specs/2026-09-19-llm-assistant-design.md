@@ -36,8 +36,13 @@ In:
 - Two tools: `search_catalog` (over the mock server's `GET /catalog`) and
   `find_video_tutorials` (SerpAPI, YouTube engine, cached).
 - Provider switching between Gemini and OpenAI, with automatic failover when
-  one runs out of credits, and the regex assistant as the last-resort fallback.
+  one runs out of credits, and a fixed "assistant unavailable" reply when both
+  have failed.
 - The first UI-side unit tests, on the pure functions.
+- Once the route handler passes the manual script below, the regex assistant
+  is deleted from the mock server: `buildReply()`, its intent regexes, the
+  glossary, the carts, `POST /query` and `POST /query/stream`. The mock server
+  keeps `GET /catalog`, `GET /tutorials` and `GET /health`.
 
 Out, and stated so nobody "fixes" the gap:
 
@@ -49,7 +54,8 @@ Out, and stated so nobody "fixes" the gap:
   wiring the rail is a separate change.
 - A `search_tutorials` tool over the 87 indexed RobotShop tutorials.
 - Persisting chat memory (Supabase) and deploying the route to Vercel.
-- Any change to the mock server. It stays the data authority on port 8009.
+- Any change to the mock server's *data* routes. It stays the catalogue and
+  tutorial authority on port 8009; only its assistant is removed.
 
 ## Architecture
 
@@ -58,7 +64,7 @@ Chatbox ──POST /api/query/stream──> ui/src/app/api/query/stream/route.ts
                                       │ streamText({ model, system, messages, tools, stopWhen: stepCountIs(3) })
                                       ├─ tools/searchCatalog.ts ──GET──> mock-server :8009/catalog
                                       ├─ tools/findVideoTutorials.ts ──> SerpAPI (engine=youtube), cached on disk
-                                      └─ every provider failed → pipe mock-server POST /query/stream through unchanged
+                                      └─ every provider failed → one fixed "assistant unavailable" line, [DONE]
 ```
 
 The turn shape is one `streamText` call from the Vercel AI SDK with two small
@@ -78,8 +84,7 @@ All new code is server-side, under `ui/`.
 | `src/agent/tools/searchCatalog.ts` | Zod schema → `validate()` → fetch `/catalog` → `trim()` to the result the model sees |
 | `src/agent/tools/findVideoTutorials.ts` | Zod schema → cache → SerpAPI → five trimmed videos |
 | `src/agent/memory.ts` | Per-`user_id` history: in-memory `Map`, text only, last 12 messages |
-| `src/agent/fallback.ts` | Proxy the mock server's SSE stream when every provider has failed |
-| `src/agent/sse.ts` | Encode `{type, payload}` lines and `[DONE]` |
+| `src/agent/sse.ts` | Encode `{type, payload}` lines and `[DONE]`; the fixed replies (image, unavailable, mid-stream apology) live here too |
 | `next.config.ts` | Rewrites `/api/catalog`, `/api/tutorials`, `/api/health` to `CATALOG_API_URL` |
 | `.env`, `.env.example` | The server-side variables below |
 
@@ -163,9 +168,10 @@ Static, roughly 400 tokens, kept byte-stable. Its rules:
 
 `LLM_PROVIDER=gemini,openai` is an ordered list. `provider.ts` tries the first;
 a 401, 402 or 429 **before the first token** moves to the next; when the list
-is exhausted, `fallback.ts` pipes the mock server's `POST /query/stream`
-response through untouched. Three tiers, so a dead key does not kill the demo
-and none of `buildReply()` has to be ported.
+is exhausted, the route streams one fixed line — the assistant is unavailable,
+the catalogue and filters still work — and `[DONE]`. A dead key degrades the
+assistant, never the page. The regex assistant is not kept as a further tier:
+it is deleted once the manual script passes.
 
 A failure **after** the first token cannot be retried without duplicating text.
 Emit one apology line as `content`, then `[DONE]`. The Chatbox must never be
@@ -279,13 +285,21 @@ estimate above.
 | "how do I use the HC-SR04" | `find_video_tutorials`; five links; the second run logs a cache hit |
 | "robots with ROS 2" | search → 0 → the honesty line |
 | "write me a poem" | one-line refusal |
-| Invalidate the primary key mid-session | next provider engages, or the mock server proxy; the Chatbox still receives `[DONE]` |
+| Invalidate the primary key mid-session | next provider engages; with both invalid, the fixed unavailable line; the Chatbox always receives `[DONE]` |
+
+After the script passes: delete the assistant from `mock-server/server.js`
+(`buildReply`, `searchRobots`, `parseFilters`/`applyFilters`, the intent
+regexes, `GLOSSARY`, `carts`/`lastShown`, `handleStream`, `handleQuery`, and
+the `/query` routes) and re-run the script to prove nothing in the UI still
+depends on it. `toCard`, `formatPrice` and the catalogue functions stay.
 
 ## Docs updated in the same change
 
 - `CLAUDE.md`: commands (`npm test`), the architecture diagram (the route
   handler between the Chatbox and the mock server), the environment variables,
-  and the sentence saying there are no UI tests.
+  the sentence saying there are no UI tests, the mock server route table
+  (`/query*` gone) and the `buildReply()` paragraph and *Migration path*
+  wording that describe replacing regexes "one at a time".
 - `ui/.env.example`: the new variables, with the `NEXT_PUBLIC_API_BASE_URL`
   line removed.
 - `docs/PAGES.md`, "Not yet wired: chat ↔ filters": the `filters` event now
