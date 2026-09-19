@@ -220,12 +220,14 @@ them. It was moved off Create React App in September 2026; the design record is
 | `/tutorials` | `src/app/tutorials/page.tsx` | Tutorials |
 | `/community` | `src/app/community/page.tsx` | Community reviews — tag a catalogue product, score it, say what board you tested it on |
 | `/assistant` | `src/app/assistant/page.tsx` | The original chat-led screen: full-height panel beside the splash image |
+| `/auth/login`, `/auth/sign-up`, `/auth/forgot-password`, `/auth/update-password`, `/auth/error` | `src/app/auth/*/page.tsx` | Accounts — email + password on Supabase Auth, one centred card each. `/auth/confirm` is a route handler that turns an email link into a session |
 
 `src/app/layout.tsx` is the only server component: the document shell, fonts,
-`Navbar`, and `src/app/providers.tsx` (toast outlet plus the
-`RenderImageContext` that lets either chat surface set the image `/assistant`
-displays). Every page file and everything under `components/` is `"use
-client"`; the app is client-rendered exactly as it was, just served by Next.
+`Navbar`, and `src/app/providers.tsx` (`AuthProvider`, the toast outlet, and
+the `RenderImageContext` that lets either chat surface set the image
+`/assistant` displays). Every page file and everything under `components/` is
+`"use client"`; the app is client-rendered exactly as it was, just served by
+Next.
 
 #### The assistant
 
@@ -287,6 +289,23 @@ Things that are easy to break:
   nowhere else. The navbar categories mirror the scraper's taxonomy in `enrich.py`.
   The API base URL defaults to `/api`; `next.config.ts` forwards the data
   routes to `CATALOG_API_URL` from `ui/.env` (gitignored; copy `.env.example`).
+  `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` live in
+  the same file and are the only two values meant for the browser.
+- **Identity is `useAuth()` and nothing else.**
+  [ui/src/context/AuthContext.tsx](ui/src/context/AuthContext.tsx) is the only
+  file that observes the Supabase session; `ui/src/lib/supabase/*` are the only
+  files that read the env variables. Sessions are cookies (`@supabase/ssr`), so
+  route handlers can see the user too, and `src/proxy.ts` refreshes the token on
+  every request — do not add redirects there; nothing on this site is behind a
+  login wall. Reading is public everywhere. Writing on `/community` (post,
+  reply, vote, delete) needs an account, and reviews are signed with the
+  account's display name from the `profiles` table, which a trigger fills at
+  sign-up. `status` starts as `"loading"` so pages disable their write controls
+  rather than flash "Sign in" at someone who is signed in. Email confirmation
+  is **off** on the project because Supabase's built-in mailer allows a few
+  sends an hour and the free tier cannot edit the email templates; turn it on
+  when real SMTP exists. Schema and settings:
+  [docs/superpowers/specs/2026-09-19-supabase-auth-design.md](docs/superpowers/specs/2026-09-19-supabase-auth-design.md).
 - **Tutorials are real and are not ours.** The page fetches `GET /tutorials` via
   [ui/src/hooks/useTutorials.ts](ui/src/hooks/useTutorials.ts); the old
   hand-written `ui/src/data/tutorials.ts` is gone. Every tutorial was written by
@@ -299,9 +318,10 @@ Things that are easy to break:
   knows community reviews live in `localStorage`.** Every function is `async`
   even though nothing awaits, so the move to Supabase rewrites that one file and
   no caller changes shape; the target table is written out in its header
-  comment. Two things stay device-local either way — which reviews this browser
-  voted helpful, and which it wrote (there is no sign-in, so "your own" means
-  "written here"). The tagged product is **denormalised into every review on
+  comment. Two things stay device-local for now — which reviews this browser
+  voted helpful, and which it wrote ("your own" still means "written here"
+  until ownership moves to row-level security with the reviews themselves).
+  The tagged product is **denormalised into every review on
   purpose**: product ids are not stable across crawls, so a review holding only
   an id would lose its subject the first time the scraper ran.
 - **The community page shares no code with tutorials.** `CommunityRail` is a

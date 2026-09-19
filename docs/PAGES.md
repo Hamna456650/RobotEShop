@@ -60,7 +60,7 @@ Add `react-router-dom` and route only that pane.
 | 6. Price history | Medium | ❌ No | 1 price point per product; needs repeat crawls |
 | 7. Tutorials / learn | **High** | ✅ **Built** | 89 real tutorials — 87 indexed from RobotShop Community via the Internet Archive, plus curated pages from The Construct and RoboDK fetched live; 68 carry a parts list priced from the catalogue |
 | 8. Seller profiles | Low | ❌ No | `seller_verified` null across all 3,269 |
-| 9. Community reviews | **High** | ✅ **Built** | Needs no scraped data — the content is written by readers. `localStorage` today, behind an async store that swaps to Supabase |
+| 9. Community reviews | **High** | ✅ **Built** | Needs no scraped data — the content is written by readers. Writing needs a Supabase account (email + password); the reviews themselves are still in `localStorage` behind an async store, and moving them to Supabase is the next spec |
 
 ---
 

@@ -78,6 +78,13 @@ Set once, recorded here so they can be re-applied:
 | `site_url` | `http://localhost:3000` | Where auth emails link back to. |
 | `uri_allow_list` | `http://localhost:3000/**` | Password-reset redirects must be allow-listed or Supabase ignores `redirectTo`. Add the Vercel URL when there is one. |
 
+Email templates cannot be changed on the free tier with the default mailer
+(the API refuses with "Email template modification is not available"), so the
+recovery email keeps Supabase's default link. That link bounces through
+Supabase's hosted verify page and lands on `/auth/confirm?code=…`; the route
+handles that with `exchangeCodeForSession`, and also accepts `token_hash` +
+`type` for the day the template can point here directly.
+
 ## Files
 
 ```
@@ -136,9 +143,10 @@ origin + "/auth/confirm?next=/auth/update-password" })`. Always shows "If that
 address has an account, a reset link is on its way" — it must not reveal which
 emails exist.
 
-**Reset.** The email link hits `/auth/confirm`, which calls
-`verifyOtp({ token_hash, type })` and redirects to `/auth/update-password`,
-now signed in. That page takes a new password twice and calls `updateUser`.
+**Reset.** The email link hits `/auth/confirm` with a `code` (or a
+`token_hash` + `type`, see above), which becomes a session and redirects to
+`/auth/update-password`, now signed in. That page takes a new password twice
+and calls `updateUser`.
 
 **Sign out.** `signOut()` from the navbar; the context flips to `signed-out`;
 the current page stays.
