@@ -32,8 +32,8 @@ actually renders, not aspirational.
 ## Commands
 
 ```bash
-# UI — port 3000. Next.js 16 (App Router); needs Node 20.9+ and ui/.env
-# (copy ui/.env.example) so it talks to the mock server instead of /api.
+# UI — port 3000. Next.js 16 (App Router); needs Node 22+ and ui/.env
+# (copy ui/.env.example): the mock server's URL plus the assistant's keys.
 cd ui && npm ci              # first time only
 npm start                    # next dev
 npm run build                # next build — also the strictest check we have
@@ -42,6 +42,7 @@ npm run lint                 # eslint src (eslint-config-next)
 npm run lint:fix
 npm run format               # prettier
 npx tsc --noEmit             # the type check used to verify UI changes
+npm test                     # vitest: the assistant's pure functions (validate, trim, cache, failover)
 
 # Mock backend — port 8009, must be running for the UI to show anything
 cd mock-server && node server.js
@@ -68,24 +69,31 @@ python -m pytest tests/test_tutorials.py -q               # the tutorial pipelin
 python -m pytest tests/test_enrich.py::test_name -q       # one test
 ```
 
-There are no UI tests. `npx tsc --noEmit`, a clean `npm run build`, `npm run
-lint` with no errors, and a clean browser console are the current bar. Lint
-reports ~40 warnings in the upstream NVIDIA chat code (`any` payloads, setState
-in fetch effects); those rules are set to `warn` in `eslint.config.mjs` on
-purpose — do not add to them, and do not silence them.
+UI tests exist only for the assistant's pure functions (`ui/src/agent/**/*.test.ts`,
+run with `npm test`); the screens have none. The bar for a UI change is
+`npx tsc --noEmit`, a clean `npm run build`, `npm run lint` with no errors, a
+clean browser console, and — for anything touching the assistant — the manual
+script in its spec. Lint reports ~40 warnings in the upstream NVIDIA chat code
+(`any` payloads, setState in fetch effects); those rules are set to `warn` in
+`eslint.config.mjs` on purpose — do not add to them, and do not silence them.
 
 ## Architecture
 
 Three independent parts joined by one file on disk:
 
 ```
-scraper/  (Python)  ──> scraper/data/robots.json ──> mock-server/  (Node) ──HTTP──> ui/  (React)
-  crawl + enrich          3,269 listings,              loadRobots() groups by       2,880 products
-  no LLM, rules only      2,880 unique products        match_key, serves JSON       behind facets
-
-run_tutorials.py    ──> scraper/data/tutorials.json ─────────^                      /tutorials
-  Internet Archive        87 tutorials, 68 with        loadTutorials(), served      86 cards +
-  -> parse -> price       a priced parts list          whole at GET /tutorials      one featured
+scraper/  (Python)  ──> scraper/data/robots.json ──> mock-server/  (Node) ──GET /catalog──> ui/  (Next.js)
+  crawl + enrich          3,269 listings,              loadRobots() groups by       │   2,880 products
+  no LLM, rules only      2,880 unique products        match_key, serves JSON       │   behind facets
+                                                              ▲                     │
+run_tutorials.py    ──> scraper/data/tutorials.json ──────────┘                     │   /tutorials
+  Internet Archive        87 tutorials, 68 with        loadTutorials(), served      │
+  -> parse -> price       a priced parts list          whole at GET /tutorials      │
+                                                                                    │
+                        ui/src/app/api/query/stream/route.ts  <──POST── Chatbox ────┘
+                          one streamText call, Gemini/OpenAI, two tools:
+                          search_catalog (GET /catalog as a tool) and
+                          find_video_tutorials (SerpAPI YouTube, cached)
 ```
 
 The tutorial pipeline **reads `robots.json`**, so a product crawl has to exist
@@ -177,23 +185,18 @@ proposal objective 7 with real content instead of placeholders.
 
 ### Mock server
 
-[mock-server/server.js](mock-server/server.js) — ~780 lines, Node built-ins only,
-no dependencies. It stands in for the NVIDIA blueprint backend (which needs
-Docker and 4×H100 GPUs) and speaks the same wire protocol:
+[mock-server/server.js](mock-server/server.js) — ~380 lines, Node built-ins only,
+no dependencies. It serves the scraper's output over HTTP until the PostgreSQL
+backend from the proposal exists:
 
 | Route | Purpose |
 |---|---|
-| `POST /query/stream` | SSE: `data: {json}` lines of `content` / `products` / `images`, then `data: [DONE]` |
-| `POST /query` | The same answer as one JSON body |
-| `GET /catalog` | Paginated browse plus facet counts; multi-select params repeat |
+| `GET /catalog` | Paginated browse plus facet counts; multi-select params repeat. Also the assistant's `search_catalog` tool |
 | `GET /tutorials` | `{count, tutorials}` — the whole library, unpaginated. Empty until `run_tutorials.py` has run; a missing `tutorials.json` is a warning, not a fatal error like a missing `robots.json` |
 | `GET /health` | `{status, robots, tutorials}` |
 
-`buildReply()` is a **rule-based implementation of the blueprint's agent
-architecture**: intent regexes (cart add, compare, tutorials, explain, greeting)
-are the planner, `parseFilters()` + `searchRobots()` are the retriever, a
-glossary is the explainer, an in-memory `Map` of carts is the memory layer. This
-is intentional — see *Migration path*.
+The regex assistant that used to live here (`buildReply()`, `POST /query*`) is
+gone; the assistant is now the Next.js route handler described under *UI*.
 
 `RATE_TO_PKR` is a hard-coded USD→PKR rate used **only** to put PKR and USD
 listings on one axis for filtering and sorting; prices always display in the
@@ -224,6 +227,41 @@ them. It was moved off Create React App in September 2026; the design record is
 displays). Every page file and everything under `components/` is `"use
 client"`; the app is client-rendered exactly as it was, just served by Next.
 
+#### The assistant
+
+`src/app/api/query/stream/route.ts` is `POST /api/query/stream`. It speaks the
+mock server's old SSE contract byte for byte (`content` / `products` frames,
+then `[DONE]`) plus one new frame, `filters`, that the Chatbox ignores today —
+it is the server half of the chat ↔ filter wiring in `docs/PAGES.md`. Design
+record: [docs/superpowers/specs/2026-09-19-llm-assistant-design.md](docs/superpowers/specs/2026-09-19-llm-assistant-design.md).
+
+- **The model never sees the catalogue.** `src/agent/tools/searchCatalog.ts`
+  wraps `GET /catalog`: the model proposes filters, `validate()` normalises
+  them in code (a `maxPrice` of 0 is dropped, "arduino" becomes "Arduino"),
+  and `trim()` returns at most six nine-field cards plus facet counts. The
+  cards the UI shows are exactly the tool's last result — the model does not
+  choose them, so it cannot describe a product that is not on screen. A
+  turn with one search costs ~2,100–2,800 input tokens; one without, under
+  1,400. The route logs `in=`/`out=` per turn.
+- **One env var switches providers.** `LLM_PROVIDER=gemini,openai` is tried
+  in order; a failure before the first token moves on; when all fail the reply
+  is a fixed line and the catalogue keeps working. Keys and model ids are in
+  `ui/.env.example`; `GEMINI_API_KEY` (the Gemini CLI's name) is accepted.
+  Gemini's free tier allows five `gemini-2.5-flash` requests a minute.
+- **History is text only and lives in `src/agent/memory.ts`**, an in-memory
+  `Map` capped at twelve messages. That is the only file that knows where
+  history lives; Supabase replaces it, nothing else changes. It is not
+  Vercel-safe as is.
+- **`find_video_tutorials` is SerpAPI, cached in `ui/.cache/youtube.json`**
+  for seven days because SerpAPI bills per search. Without `SERPAPI_KEY` the
+  tool is not registered and the model says it cannot offer videos.
+- The data routes reach the mock server through `next.config.ts` rewrites of
+  `/api/catalog|tutorials|health` to `CATALOG_API_URL`; `NEXT_PUBLIC_API_BASE_URL`
+  is no longer set.
+- Cart intents and image search were not ported. The review document reduced
+  the cart to a saved list for an aggregator, and an uploaded photo gets a
+  fixed "describe the part instead" reply.
+
 Things that are easy to break:
 
 - **Every page is statically prerendered at build time**, which means the
@@ -247,9 +285,8 @@ Things that are easy to break:
 - **Brand name, assistant name, categories, API base URL, and feature flags** are
   all in [ui/src/config/config.ts](ui/src/config/config.ts). Change them there and
   nowhere else. The navbar categories mirror the scraper's taxonomy in `enrich.py`.
-  The API base URL comes from `NEXT_PUBLIC_API_BASE_URL` in `ui/.env`
-  (gitignored; copy `.env.example`) and falls back to `/api` for the Docker
-  nginx proxy.
+  The API base URL defaults to `/api`; `next.config.ts` forwards the data
+  routes to `CATALOG_API_URL` from `ui/.env` (gitignored; copy `.env.example`).
 - **Tutorials are real and are not ours.** The page fetches `GET /tutorials` via
   [ui/src/hooks/useTutorials.ts](ui/src/hooks/useTutorials.ts); the old
   hand-written `ui/src/data/tutorials.ts` is gone. Every tutorial was written by
@@ -288,9 +325,11 @@ plan of record: **copy the blueprint's architecture, not its infrastructure** �
 planner → specialist → grounded responder, memory in PostgreSQL, LLM output
 validated by ordinary code before it reaches the database. Explicitly dropped:
 GPUs and self-hosted NIMs, Milvus/etcd/MinIO (use `pgvector`), the NeMo
-Guardrails container, image search. The migration is to replace the regex rules
-in `buildReply()` one at a time with model calls, keeping the `/query/stream` SSE
-contract so `ui/` never changes.
+Guardrails container, image search. The first step of that migration is done:
+the assistant is a model call with the catalogue as a tool, behind the same
+`/query/stream` SSE contract, so the Chatbox never changed. What remains is the
+data side — PostgreSQL in place of `robots.json`, and pgvector ranking on top
+of the SQL filters.
 
 For robots, **SQL is the authority and embeddings are the ranker** — similarity
 search alone cannot answer "which robots support ROS 2".
@@ -299,7 +338,8 @@ search alone cannot answer "which robots support ROS 2".
 data can actually support. Product detail is next; price history, tutorials, and
 seller profiles are blocked on data rather than on UI. The chat ↔ filter wiring
 named there as the feature neither a plain catalogue nor a plain chatbot can
-offer is still unbuilt, and both halves are ready for it.
+offer is half built: the assistant emits a `filters` frame; the catalogue does
+not listen for it yet.
 
 ## Honesty about coverage
 

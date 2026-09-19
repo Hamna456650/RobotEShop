@@ -208,11 +208,15 @@ Two things worth doing next, both cheap now the page exists:
   device-local, `sort=rating-desc` belongs beside the price sorts in
   `buildCatalog()`.
 
-## Not yet wired: chat ↔ filters
+## Half wired: chat ↔ filters
 
-The feature named above as "neither a plain catalogue nor a plain chatbot" is
-still unbuilt. The groundwork is in place: `parseFilters()` in `server.js`
-already turns "beginner Arduino sensors under Rs 500" into a filter object, and
-the catalogue's filter state is entirely in the URL query string. Connecting
-them means having the assistant push a query string and the catalogue announce
-its changes back — no restructuring, just the wire.
+The feature named above as "neither a plain catalogue nor a plain chatbot" has
+its server half. The assistant (`ui/src/app/api/query/stream/route.ts`) emits a
+`{type: "filters", payload}` SSE frame after the cards, carrying the exact
+`GET /catalog` filters it applied — `{"category": "Sensors", "platform":
+["Arduino"]}` for "sensors for Arduino". The regex `parseFilters()` in
+`server.js` is gone; the filters now come from the model, validated in
+`ui/src/agent/tools/searchCatalog.ts`, so they are already in the catalogue's
+own vocabulary. What remains is the catalogue listening: turn that payload into
+a query string and push it, and announce manual rail changes back into the
+chat — no restructuring, just the wire.

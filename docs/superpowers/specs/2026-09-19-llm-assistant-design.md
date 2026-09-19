@@ -1,6 +1,6 @@
 # Replace the regex assistant with an LLM that drives the catalogue filters
 
-Date: 2026-09-19. Status: approved, not started. Branch: `nextjs-migration`.
+Date: 2026-09-19. Status: implemented. Branch: `nextjs-migration`.
 
 Builds on [2026-09-19-nextjs-migration-design.md](2026-09-19-nextjs-migration-design.md)
 and on Part B of [../../AGENT-ARCHITECTURE-REVIEW.md](../../AGENT-ARCHITECTURE-REVIEW.md).
