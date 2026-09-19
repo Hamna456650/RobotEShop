@@ -167,7 +167,8 @@ Static, roughly 400 tokens, kept byte-stable. Its rules:
 ### Providers and failure
 
 `LLM_PROVIDER=gemini,openai` is an ordered list. `provider.ts` tries the first;
-a 401, 402 or 429 **before the first token** moves to the next; when the list
+any failure **before the first token** — bad key, no credits, rate limit,
+outage, network — moves to the next; when the list
 is exhausted, the route streams one fixed line — the assistant is unavailable,
 the catalogue and filters still work — and `[DONE]`. A dead key degrades the
 assistant, never the page. The regex assistant is not kept as a further tier:
@@ -265,8 +266,8 @@ functions only. No network, no model.
 - `searchCatalog.trim()`: nine-field card; `facets` present iff `total > shown`;
   `withoutKeyword` present iff `total === 0 && q`.
 - `memory`: caps at twelve; stores text only.
-- `provider`: `"gemini,openai"` parses in order; a 429 on the first moves to the
-  second; an exhausted list reports fallback.
+- `provider`: `"gemini,openai"` parses in order; a failure before output on
+  the first moves to the second; an exhausted list reports null.
 - The scraper's rule applies here: every bug found later becomes a case.
 
 Existing bar: `npx tsc --noEmit`, `npm run lint`, `npm run build` clean.
