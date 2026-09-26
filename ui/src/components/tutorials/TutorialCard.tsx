@@ -64,11 +64,14 @@ function initialOf(tutorial: Tutorial): string {
 }
 
 const TutorialCard: React.FC<TutorialCardProps> = ({ tutorial }) => {
-  // The Internet Archive never captured a thumbnail for a handful of these,
-  // and a capture can go missing later. Same fallback as ProductCard.
+  // Archive image URLs are slow — show a shimmer while loading, only show
+  // "No photo" when the image genuinely fails (404 / CORS / never captured).
   const [imageFailed, setImageFailed] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
-  const showImage = Boolean(tutorial.image) && !imageFailed;
+
+  const hasImageUrl = Boolean(tutorial.image) && !imageFailed;
+  const showShimmer = hasImageUrl && !imageLoaded;
 
   const parts = partCount(tutorial);
   const priced = pricedPartCount(tutorial);
@@ -76,22 +79,27 @@ const TutorialCard: React.FC<TutorialCardProps> = ({ tutorial }) => {
   const logo = SOURCE_LOGO[tutorial.sourceName];
   const showLogo = Boolean(logo) && !logoFailed;
 
+  // Media container class: shimmer while loading, dark tile when no URL.
+  let mediaClass = 'tut-card__media';
+  if (!hasImageUrl) mediaClass += ' tut-card__media--empty';
+  else if (showShimmer) mediaClass += ' tut-card__media--loading';
+
   return (
     <li>
       <article className="tut-card">
-        <div
-          className={`tut-card__media${showImage ? '' : ' tut-card__media--empty'}`}
-        >
-          {showImage ? (
+        <div className={mediaClass}>
+          {hasImageUrl && (
             <img
               src={tutorial.image}
               alt=""
               loading="lazy"
+              style={showShimmer ? { opacity: 0, position: 'absolute' } : undefined}
+              onLoad={() => setImageLoaded(true)}
               onError={() => setImageFailed(true)}
             />
-          ) : (
-            <span className="tut-card__nophoto">No photo</span>
           )}
+          {showShimmer && <span className="tut-card__shimmer" aria-hidden="true" />}
+          {!hasImageUrl && <span className="tut-card__nophoto">No photo</span>}
           {tutorial.runtimeSec !== null && (
             <span className="tut-card__runtime">
               {formatRuntime(tutorial.runtimeSec)}
