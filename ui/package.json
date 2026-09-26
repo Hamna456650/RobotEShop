@@ -24,9 +24,9 @@
     "zod": "^4.6.5"
   },
   "scripts": {
-    "dev": "next dev",
-    "start": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "start": "next dev --webpack",
+    "build": "next build --webpack",
     "serve": "next start",
     "test": "vitest run",
     "lint": "eslint src",
