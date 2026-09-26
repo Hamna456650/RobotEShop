@@ -16,6 +16,7 @@ import { modelFor, parseProviderList, withFailover } from "../../../../agent/pro
 import { systemPrompt } from "../../../../agent/prompt";
 import { DONE, FIXED_REPLIES, SSE_HEADERS, encodeEvent, fixedReply } from "../../../../agent/sse";
 import { makeTools, type TurnState } from "../../../../agent/tools";
+import { runLocalFallback } from "../../../../agent/localFallback";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +47,7 @@ export async function POST(req: Request): Promise<Response> {
     async start(controller) {
       const send = (frame: string) => controller.enqueue(encoder.encode(frame));
       const startedAt = Date.now();
-      const turn: TurnState = { lastSearch: null };
+      const turn: TurnState = { lastSearch: null, lastBom: null };
       const messages: ModelMessage[] = [...history(userId), { role: "user", content: query }];
       let answer = "";
       let interrupted = false;
@@ -94,11 +95,36 @@ export async function POST(req: Request): Promise<Response> {
       });
 
       if (used === null) {
-        send(encodeEvent({ type: "content", payload: FIXED_REPLIES.unavailable }));
+        // All LLM providers failed — run the local rule-based fallback so the
+        // chat is never completely dead. Streams text + real product cards with
+        // zero API calls.
+        try {
+          const CATALOG_API_URL = process.env.CATALOG_API_URL || "http://127.0.0.1:8009";
+          const { text, cards, applied } = await runLocalFallback(query, {
+            fetch,
+            baseUrl: CATALOG_API_URL,
+          });
+          // Stream text word-by-word for a natural feel
+          const words = text.split(" ");
+          for (const word of words) {
+            send(encodeEvent({ type: "content", payload: word + " " }));
+            answer += word + " ";
+          }
+          if (cards.length > 0) {
+            send(encodeEvent({ type: "products", payload: cards }));
+            send(encodeEvent({ type: "filters", payload: applied as Record<string, unknown> }));
+          }
+          remember(userId, query, answer.trim());
+        } catch {
+          send(encodeEvent({ type: "content", payload: FIXED_REPLIES.unavailable }));
+        }
       } else {
         if (turn.lastSearch && turn.lastSearch.cards.length > 0) {
           send(encodeEvent({ type: "products", payload: turn.lastSearch.cards }));
           send(encodeEvent({ type: "filters", payload: turn.lastSearch.applied }));
+        }
+        if (turn.lastBom) {
+          send(encodeEvent({ type: "bom", payload: turn.lastBom }));
         }
         if (answer && !interrupted) remember(userId, query, answer);
       }

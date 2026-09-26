@@ -1,6 +1,6 @@
 import LandingScreen from "../components/landing/LandingScreen";
 
-/** `/` — the landing page. The catalogue lives at /catalog. */
+/** `/` — the landing page. */
 export default function HomePage() {
   return <LandingScreen />;
 }
