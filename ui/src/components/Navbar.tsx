@@ -117,6 +117,14 @@ const Navbar: React.FC = () => {
       <div className="shrink-0 flex items-center gap-4 pl-6 border-l border-[#ebebeb] text-[14px] whitespace-nowrap">
         {status === "signed-in" && (
           <>
+            {/* 🆕 YEH ADD KARO — Dashboard link */}
+            <Link
+              href="/dashboard"
+              className="text-[#666666] hover:text-[#171717] no-underline"
+            >
+              Dashboard
+            </Link>
+
             <span className="text-[#171717]">{displayName || "Signed in"}</span>
             <button
               type="button"
@@ -136,8 +144,8 @@ const Navbar: React.FC = () => {
           </Link>
         )}
       </div>
-    </header>
-  );
-};
+      </header>
+    );
+  };
 
 export default Navbar;

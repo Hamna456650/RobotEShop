@@ -13,7 +13,7 @@ import React from "react";
 import "../index.css";
 import "../chatbox.css";
 
-import Navbar from "../components/Navbar";
+import ConditionalNavbar from "../components/ConditionalNavbar";
 import Providers from "./providers";
 import { config } from "../config/config";
 
@@ -71,7 +71,7 @@ export default function RootLayout({
             {/* The page footer (Contact us / Guidelines / Privacy policy) was
                 removed so the full height below the navbar belongs to the
                 content. */}
-            <Navbar />
+          <ConditionalNavbar />
             {children}
           </div>
         </Providers>
