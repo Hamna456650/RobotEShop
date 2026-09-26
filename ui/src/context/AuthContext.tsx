@@ -4,7 +4,7 @@
  * Who is signed in, for the whole app.
  *
  * This is the only file that knows how a session is observed. Everything else
- * — the navbar, the community page — asks `useAuth()` and gets three things:
+ * â€” the navbar, the community page â€” asks `useAuth()` and gets three things:
  * a status, the Supabase user, and the profile row that holds the display
  * name. `status` starts as "loading" so a page can hold its write controls
  * disabled instead of flashing "Sign in" at someone who is signed in.
@@ -37,7 +37,7 @@ interface AuthValue {
   status: AuthStatus;
   user: User | null;
   /** Null while loading, while signed out, and for the instant between
-      sign-up and the trigger writing the row — `displayName` below falls
+      sign-up and the trigger writing the row â€” `displayName` below falls
       back to the name the sign-up form sent in user metadata. */
   profile: Profile | null;
   /** The name to sign things with. "" when signed out. */
@@ -67,15 +67,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (!CONFIGURED) {
       console.error(
-        "Supabase is not configured — copy ui/.env.example to ui/.env. Accounts are off."
+        "Supabase is not configured â€” copy ui/.env.example to ui/.env. Accounts are off."
       );
       return;
     }
 
     // `onAuthStateChange` fires INITIAL_SESSION on subscribe, so no separate
-    // getSession() call is needed — one path, not two that can disagree.
+    // getSession() call is needed â€” one path, not two that can disagree.
     // The profile is cleared here too: a signed-out session has no name.
-    const { data } = createClient().auth.onAuthStateChange((_event, session) => {
+    const { data } = createClient().auth.onAuthStateChange((_event: unknown, session: { user: import('@supabase/supabase-js').User } | null) => {
       setUser(session?.user ?? null);
       setStatus(session ? "signed-in" : "signed-out");
       if (!session) setProfile(null);
@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       .select("id, display_name")
       .eq("id", user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: { data: { id: string; display_name: string } | null }) => {
         if (!live || !data) return;
         setProfile({ id: data.id, displayName: data.display_name });
       });

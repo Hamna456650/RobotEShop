@@ -348,6 +348,8 @@ export interface LastSearch {
 
 export interface TurnState {
   lastSearch: LastSearch | null;
+  /** Set by generate_bom after a successful generation, for the SSE bom event. */
+  lastBom: import("./generateBom").BomResult | null;
 }
 
 export function makeSearchCatalogTool(turn: TurnState, deps: SearchDeps) {
