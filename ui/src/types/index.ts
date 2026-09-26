@@ -18,7 +18,8 @@ export type MessageRole =
   | 'image'
   | 'image_row'
   | 'product_row'
-  | 'user_image';
+  | 'user_image'
+  | 'bom_row';
 
 /** A seller offering a robot, for price comparison across vendors. */
 export interface RobotSeller {
@@ -191,3 +192,11 @@ export interface Tutorial {
   verifiedBuild: boolean;
   parts: TutorialPart[];
 }
+
+/* BOM (Bill of Materials)
+   ========================
+   Produced by the generate_bom agent tool (agent/tools/generateBom.ts).
+   Re-exported here so UI components can consume the SSE bom event without
+   importing directly from the agent layer. */
+
+export type { BomLine, BomResult } from "../agent/tools/generateBom";

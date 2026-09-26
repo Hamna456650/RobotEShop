@@ -23,7 +23,9 @@ import React from "react";
 import Showdown from "showdown";
 import SafeHTML from "./SafeHTML";
 import Loader from "./Loader";
+import BomCard from "./BomCard";
 import { ChatMessageProps, MessageRole, ImageContent, ImageRowContent, RobotRowContent, RobotCard } from "../../types";
+import type { BomResult } from "../../agent/tools/generateBom";
 import { isFashionMode } from "../../config/config";
 // Served from public/ so it needs no import typing. Drawn in ink on the
 // inverted surface — the same black the user's bubble uses.
@@ -182,6 +184,17 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
               </article>
             );
           })}
+        </div>
+      );
+    }
+
+    // BOM result card — parts table produced by generate_bom tool
+    if (role === "bom_row") {
+      const bom = content as unknown as BomResult;
+      return (
+        <div ref={ref} style={{ display: "inline-flex", alignItems: "flex-start", gap: 8, marginTop: 10, width: "100%" }}>
+          <img src={advisorAvatar} alt="Assistant" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+          <BomCard bom={bom} />
         </div>
       );
     }

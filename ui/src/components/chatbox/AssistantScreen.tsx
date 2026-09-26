@@ -1,33 +1,28 @@
 "use client";
 
 /**
- * `/assistant` with its query string read. `?q=` is the question the landing
- * page's ask bar was given; it goes to Chatbox as `initialQuery`. The
- * Suspense boundary is what lets `useSearchParams` coexist with the static
- * prerender (the same arrangement CatalogScreen uses).
+ * `/assistant` — the full-page chat screen.
+ *
+ * Reads ?q= from the URL and passes it to ModernChatbot as `initialQuery`
+ * so the assistant starts answering immediately when the user lands here
+ * from the homepage search bar or a suggestion link.
  */
 
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-import Apparel from "../Apparel";
-import Chatbox from "./chatbox";
+import ModernChatbot from "../chatbot/ModernChatbot";
 
 const AssistantWithQuery: React.FC = () => {
   const params = useSearchParams();
   const q = params.get("q")?.trim() || undefined;
-  return <Chatbox initialQuery={q} />;
+  return <ModernChatbot initialQuery={q} className="mc--fullpage" />;
 };
 
 const AssistantScreen: React.FC = () => (
-  <>
-    <Apparel />
-    {/* A null fallback, not a second <Chatbox />: two instances would each
-        play the intro, and the first would be thrown away mid-sentence. */}
-    <Suspense fallback={null}>
-      <AssistantWithQuery />
-    </Suspense>
-  </>
+  <Suspense fallback={<ModernChatbot className="mc--fullpage" />}>
+    <AssistantWithQuery />
+  </Suspense>
 );
 
 export default AssistantScreen;

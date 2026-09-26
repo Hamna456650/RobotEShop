@@ -305,6 +305,18 @@ const Chatbox: React.FC<ChatboxProps> = ({ initialQuery }) => {
                 };
                 return updated;
               });
+            } else if (type === 'bom') {
+              // BOM result from generate_bom tool — render as a parts table
+              // Push as a new message AFTER the current assistant text message
+              setMessages(prev => {
+                const updated = [...prev];
+                updated.push({
+                  role: 'bom_row',
+                  content: payload,
+                  productName: '',
+                });
+                return updated;
+              });
             }
 
             // Update assistant message

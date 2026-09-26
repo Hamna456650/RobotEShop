@@ -1,5 +1,5 @@
 /**
- * Tutorials page — Vercel-style.
+ * Tutorials page â€” Vercel-style.
  *
  * Tokens are Vercel's, per
  * docs/superpowers/specs/2026-09-19-vercel-style-catalogue-preview-design.md.
@@ -10,11 +10,11 @@
  *
  *   - Geist Sans for reading. Geist Mono, small and uppercase, for every
  *     label, eyebrow, count and figure.
- *   - Every number a reader compares — a price, a runtime, a part count — is
+ *   - Every number a reader compares â€” a price, a runtime, a part count â€” is
  *     set in mono with tabular figures, so they line up in a column.
  *   - Figures are ranked, not uniform. See "FIGURES" below.
  *
- * The old token names (--ink, --slate, --rule …) are kept so the selectors
+ * The old token names (--ink, --slate, --rule â€¦) are kept so the selectors
  * below read the same; only their values changed.
  */
 
@@ -90,14 +90,14 @@
 /* FIGURES
    =======
    Every number used to be set at roughly one size, so a kit total, a step
-   count and a facet count all carried the same weight — which is another way
+   count and a facet count all carried the same weight â€” which is another way
    of saying none of them carried any. They are ranked in three tiers, and the
    membership of each tier is listed here rather than scattered through the
    file, so the ranking stays legible.
 
    Lining tabular figures throughout. */
 
-/* Tier 1 — the number a decision turns on. */
+/* Tier 1 â€” the number a decision turns on. */
 .tut-bom__total .tut-bom__cost {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums lining-nums;
@@ -114,7 +114,7 @@
   font-size: 16px;
 }
 
-/* Tier 2 — a figure read in passing. */
+/* Tier 2 â€” a figure read in passing. */
 .tut-bom__cost,
 .tut-hero__coverage b,
 .tut-toolbar__count b {
@@ -126,7 +126,7 @@
   letter-spacing: 0;
 }
 
-/* Tier 3 — bookkeeping you should be able to ignore. */
+/* Tier 3 â€” bookkeeping you should be able to ignore. */
 .tut-bom__qty,
 .tut-rail__count {
   font-family: var(--mono);
@@ -161,7 +161,7 @@
    data. It is a sentence now, and only the figures inside it are set apart.
 
    The band is a label on the page, not a landing page. It was a 30px display
-   title over three lines of lead and a second paragraph — ~250px of mostly
+   title over three lines of lead and a second paragraph â€” ~250px of mostly
    nothing above the fold. Everything here is sized to keep the whole header
    near 110px: the title steps down to 20px on one line, the lead runs wider
    so it wraps at two, and the search sits alongside rather than under. */
@@ -188,7 +188,7 @@
 }
 
 /* Wide on purpose. A 52ch measure is right for an article and wrong for a
-   header — here it just buys extra lines nobody reads more slowly for. */
+   header â€” here it just buys extra lines nobody reads more slowly for. */
 .tut-hero__lead {
   margin: 4px 0 0;
   max-width: 88ch;
@@ -224,7 +224,7 @@
 }
 
 /* Search sits in the hero because finding a part by name is the way most
-   people arrive here — they already own the sensor. */
+   people arrive here â€” they already own the sensor. */
 .tut-search {
   position: relative;
 }
@@ -383,7 +383,7 @@
   min-height: 260px;
 }
 
-/* Absolute rather than height:100% — a grid item's height is not a resolvable
+/* Absolute rather than height:100% â€” a grid item's height is not a resolvable
    percentage basis, so the image would otherwise sit at its natural size with
    white bands above and below. */
 .tut-featured__media img {
@@ -402,7 +402,7 @@
   gap: 10px;
 }
 
-/* The mono stamp above the title — sized by the eyebrow group at the top. */
+/* The mono stamp above the title â€” sized by the eyebrow group at the top. */
 .tut-eyebrow {
   margin: 0;
   color: var(--slate);
@@ -424,7 +424,7 @@
   line-height: 1.5;
 }
 
-/* The receipt. Mono figures, right-aligned, one rule above the total — read it
+/* The receipt. Mono figures, right-aligned, one rule above the total â€” read it
    the way you read a till slip. Hairline-bordered on the canvas tone, so it is
    a panel inside the card rather than a second card. */
 .tut-bom {
@@ -467,7 +467,7 @@
   vertical-align: baseline;
 }
 
-/* Part names stay in the UI face. Only the figures are mono — running the
+/* Part names stay in the UI face. Only the figures are mono â€” running the
    whole ledger in Plex Mono made the names shout as loudly as the prices. */
 .tut-bom__name {
   width: 100%;
@@ -735,7 +735,7 @@
 }
 
 /* Whose work this is, first, the way a course card leads with the provider.
-   Quiet — it is a credit, not a selling point — but never absent. */
+   Quiet â€” it is a credit, not a selling point â€” but never absent. */
 .tut-card__source {
   display: flex;
   align-items: center;
@@ -853,7 +853,7 @@
 }
 
 /* Two stacked lines, not one wrapping row: at three columns the card is
-   about 285px inside, and "Video · Beginner" plus a kit price plus the
+   about 285px inside, and "Video Â· Beginner" plus a kit price plus the
    button do not fit on one line without wrapping unevenly. */
 .tut-card__facts {
   display: flex;
@@ -1053,4 +1053,27 @@
 .tut-featured__title a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Shimmer while an Archive image URL is in-flight. */
+.tut-card__media--loading {
+  background: #f0f0f0;
+}
+
+.tut-card__shimmer {
+  display: block;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 37%, #f0f0f0 63%);
+  background-size: 400% 100%;
+  animation: tut-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes tut-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position:   0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tut-card__shimmer { animation: none; background: #ebebeb; }
 }
