@@ -116,16 +116,15 @@ const Navbar: React.FC = () => {
       <div className="shrink-0 flex items-center gap-4 pl-6 border-l border-[rgba(255,255,255,0.08)] text-[14px] whitespace-nowrap">
         {status === "signed-in" && (
           <>
-            {/* 🆕 YEH ADD KARO — Dashboard link */}
-            <Link
-              href="/dashboard"
-              className="text-[#666666] hover:text-[#171717] no-underline"
-            >
+            <Link href="/dashboard" className={linkClass(isActive("/dashboard"))}>
               Dashboard
             </Link>
-
-            <span className="text-[#171717]">{displayName || "Signed in"}</span>
-            <span className="text-[#ffffff]">{displayName || "Signed in"}</span>
+            <Link
+              href="/dashboard"
+              className="text-[#ffffff] no-underline hover:underline underline-offset-2"
+            >
+              {displayName || "Signed in"}
+            </Link>
             <button
               type="button"
               className="text-[#888888] hover:text-[#ffffff] transition-colors duration-150"

@@ -193,7 +193,7 @@ backend from the proposal exists:
 |---|---|
 | `GET /catalog` | Paginated browse plus facet counts; multi-select params repeat. Also the assistant's `search_catalog` tool |
 | `GET /tutorials` | `{count, tutorials}` — the whole library, unpaginated. Empty until `run_tutorials.py` has run; a missing `tutorials.json` is a warning, not a fatal error like a missing `robots.json` |
-| `GET /health` | `{status, robots, tutorials}` |
+| `GET /health` | `{status, robots, tutorials, multiSeller}` (`multiSeller` = products on more than one store) |
 
 The regex assistant that used to live here (`buildReply()`, `POST /query*`) is
 gone; the assistant is now the Next.js route handler described under *UI*.
@@ -219,6 +219,7 @@ them. It was moved off Create React App in September 2026; the design record is
 | `/catalog/[category]` | `src/app/catalog/[category]/page.tsx` | Catalogue with a category preset; the navbar strip links here |
 | `/tutorials` | `src/app/tutorials/page.tsx` | Tutorials |
 | `/community` | `src/app/community/page.tsx` | Community reviews — tag a catalogue product, score it, say what board you tested it on |
+| `/dashboard`, `/dashboard/settings` | `src/app/dashboard/*` | The signed-in home: `layout.tsx` (Sidebar + Topbar, navbar hidden by `ConditionalNavbar`) sends signed-out visitors to login. Every figure comes from `src/hooks/useDashboard.ts` (`/health`, `/catalog`, `/tutorials`, Supabase reviews); nothing is hard-coded. Sign-in, sign-up and email confirmation land here; a `?next=/` is turned into `/dashboard` by `afterSignIn()` in `components/auth/nextPath.ts` |
 | `/assistant` | `src/app/assistant/page.tsx` | The original chat-led screen: full-height panel beside the splash image |
 | `/auth/login`, `/auth/sign-up`, `/auth/forgot-password`, `/auth/update-password`, `/auth/error` | `src/app/auth/*/page.tsx` | Accounts — email + password on Supabase Auth, one centred card each. `/auth/confirm` is a route handler that turns an email link into a session |
 | any unmatched URL, any page that throws | `src/app/not-found.tsx`, `src/app/error.tsx` | The status pages: both render `components/status/StatusPage` inside the layout, so the navbar stays. The 404 names the path that failed; the error page offers `reset()` and shows the digest. No `global-error.tsx` on purpose. Record: [docs/superpowers/specs/2026-09-19-status-pages-design.md](docs/superpowers/specs/2026-09-19-status-pages-design.md) |

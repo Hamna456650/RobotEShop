@@ -29,6 +29,8 @@ import { createClient } from "../lib/supabase/client";
 export interface Profile {
   id: string;
   displayName: string;
+  /** ISO 8601. "Member since" on the dashboard. */
+  createdAt: string;
 }
 
 export type AuthStatus = "loading" | "signed-out" | "signed-in";
@@ -89,12 +91,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     let live = true;
     createClient()
       .from("profiles")
-      .select("id, display_name")
+      .select("id, display_name, created_at")
       .eq("id", user.id)
       .maybeSingle()
-      .then(({ data }: { data: { id: string; display_name: string } | null }) => {
+      .then(({ data }: { data: { id: string; display_name: string; created_at: string } | null }) => {
         if (!live || !data) return;
-        setProfile({ id: data.id, displayName: data.display_name });
+        setProfile({
+          id: data.id,
+          displayName: data.display_name,
+          createdAt: data.created_at,
+        });
       });
     return () => {
       live = false;

@@ -12,7 +12,7 @@
  *   GET  /tutorials     -> {count, tutorials:[{...}]} — the whole library, no paging.
  *                          Built by scraper/run_tutorials.py from archived
  *                          RobotShop Community pages; empty until that is run.
- *   GET  /health        -> {status:"ok", robots, tutorials}
+ *   GET  /health        -> {status:"ok", robots, tutorials, multiSeller}
  *
  * No dependencies: Node's built-in http/fs only.
  */
@@ -130,6 +130,7 @@ function loadRobots() {
 }
 
 const ROBOTS = loadRobots();
+const MULTI_SELLER = ROBOTS.filter((r) => r.offerCount > 1).length;
 if (ROBOTS.length) {
   console.log(`Loaded ${ROBOTS.length} products from ${path.relative(process.cwd(), CATALOGUE_PATH)}`);
   console.log(`Categories: ${[...new Set(ROBOTS.map((r) => r.category))].join(', ')}`);
@@ -339,6 +340,9 @@ const server = http.createServer(async (req, res) => {
         status: 'ok',
         robots: ROBOTS.length,
         tutorials: TUTORIAL_LIBRARY.length,
+        // Products listed on more than one store: the ones a price comparison
+        // actually compares. A fact about the crawl, like the two above.
+        multiSeller: MULTI_SELLER,
       }));
       return;
     }
