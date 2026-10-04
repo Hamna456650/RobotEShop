@@ -1,14 +1,14 @@
 /**
  * BomCard — renders a BomResult as a styled parts-table inside the chat panel.
  *
- * Visual language mirrors the existing robot-card / chatbox aesthetic:
- * dark surface (#1a1c20), mono type for prices and stamps, hairline borders.
- * All layout is CSS classes defined at the bottom of chatbox.css — no new
- * CSS frameworks are introduced here.
+ * Styled in its own sheet, bomCard.css, in the DESIGN.md palette: white
+ * surface, hairline borders, mono type for prices and stamps. chatbox.css
+ * stays untouched upstream styling, so these rules do not live there.
  */
 
 import React from "react";
 import type { BomResult, BomLine } from "../../agent/tools/generateBom";
+import "../../bomCard.css";
 
 export interface BomCardProps {
   bom: BomResult;

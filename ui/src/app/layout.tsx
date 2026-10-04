@@ -13,7 +13,7 @@ import React from "react";
 import "../index.css";
 import "../chatbox.css";
 
-import ConditionalNavbar from "../components/ConditionalNavbar";
+import Navbar from "../components/Navbar";
 import Providers from "./providers";
 import { config } from "../config/config";
 
@@ -67,11 +67,11 @@ export default function RootLayout({
       </head>
       <body>
         <Providers>
-          <div className="app-shell bg-[#0a0a0a] flex flex-col w-screen">
+          <div className="app-shell bg-[#fafafa] flex flex-col w-screen">
             {/* The page footer (Contact us / Guidelines / Privacy policy) was
                 removed so the full height below the navbar belongs to the
                 content. */}
-          <ConditionalNavbar />
+            <Navbar />
             {children}
           </div>
         </Providers>

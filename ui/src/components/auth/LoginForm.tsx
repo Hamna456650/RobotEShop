@@ -7,12 +7,12 @@ import React, { useRef, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 import AuthCard from "./AuthCard";
 import { describeAuthError } from "./errors";
-import { afterSignIn } from "./nextPath";
+import { safeNext } from "./nextPath";
 import PasswordInput from "./PasswordInput";
 
 const LoginForm: React.FC = () => {
   const router = useRouter();
-  const next = afterSignIn(useSearchParams().get("next"));
+  const next = safeNext(useSearchParams().get("next"));
 
   const [email, setEmail] = useState("");
   // Uncontrolled (see PasswordInput) so a saved password the browser fills in

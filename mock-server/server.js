@@ -29,8 +29,11 @@ const IMAGE_DIR = path.join(__dirname, '..', 'ui', 'public', 'images', 'robots')
 const CATALOGUE_PATH = path.join(__dirname, '..', 'scraper', 'data', 'robots.json');
 
 /**
- * USD → PKR conversion used only for sorting/filtering on a shared price axis.
- * Prices always display in the currency the seller quoted.
+ * Not every source quotes in rupees — shop.unitree.com lists in USD. Prices are
+ * shown in the currency the seller actually quoted, and this rate is used only
+ * to put listings on a common axis for filtering, sorting, and "cheapest
+ * seller". It is a hard-coded assumption, not a live rate: update it, or move
+ * conversion into the scraper, before anyone treats these totals as accurate.
  */
 const RATE_TO_PKR = { PKR: 1, USD: 280 };
 
@@ -43,6 +46,7 @@ function titleCase(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+/** Local file for a listing's primary photo, falling back to the remote URL. */
 function imageFor(row) {
   const images = row.images || [];
   const primary = images.find((i) => i.url === row.primary_image) || images[0];
@@ -50,26 +54,18 @@ function imageFor(row) {
   return row.primary_image || '';
 }
 
+/**
+ * Reads the real scraped catalogue produced by scraper/run.py.
+ *
+ * One row is one listing on one site, so `match_key` is what groups the same
+ * physical product across sites into a price comparison. See
+ * scraper/robotshop/models.py for the full record.
+ */
 function loadRobots() {
-  let raw;
-  try {
-    raw = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf8'));
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      console.warn(
-        `robots.json not found at ${CATALOGUE_PATH}.\n` +
-        `Run: cd scraper && python run.py --from-config\n` +
-        `Serving empty catalogue until then.`
-      );
-    } else {
-      console.error(`Could not read robots.json: ${err.message}`);
-    }
-    return [];
-  }
+  const rows = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf8'))
+    .filter((row) => row.name && typeof row.price === 'number');
 
-  const rows = raw.filter((row) => row.name && typeof row.price === 'number');
-
-  // Group listings that describe the same product across sites.
+  // Group listings that describe the same product.
   const byMatchKey = new Map();
   for (const row of rows) {
     const key = row.match_key || row.source_url;
@@ -92,9 +88,13 @@ function loadRobots() {
         price: l.price,
         currency: l.currency || 'PKR',
         pricePkr: toPkr(l.price, l.currency || 'PKR'),
+        // The scraper does not yet establish authorised-distributor status, so
+        // this is null across the board. Rendering it as false rather than
+        // inventing a badge keeps the UI honest.
         verified: l.seller_verified === true,
         url: l.source_url,
       }))
+      // Cheapest first, compared on a common currency.
       .sort((a, b) => a.pricePkr - b.pricePkr);
 
     catalogue.push({
@@ -107,6 +107,7 @@ function loadRobots() {
       image: imageFor(row),
       price: sellers[0].price,
       currency: sellers[0].currency,
+      // Common-currency value, used for filtering and ranking only.
       pricePkr: sellers[0].pricePkr,
       offerCount: sellers.length,
       hasVerifiedSeller: sellers.some((s) => s.verified),
@@ -121,6 +122,8 @@ function loadRobots() {
       ros: row.ros_support ? (row.ros_version || 'ROS') : null,
       dof: row.degrees_of_freedom ?? undefined,
       tutorials: (row.tutorial_videos || []).length,
+      // 92% populated. True if any seller has it, since the shopper only needs
+      // one of them to actually have stock.
       inStock: listings.some((l) => l.in_stock === true),
       sourceUrl: row.source_url,
     });
@@ -131,10 +134,8 @@ function loadRobots() {
 
 const ROBOTS = loadRobots();
 const MULTI_SELLER = ROBOTS.filter((r) => r.offerCount > 1).length;
-if (ROBOTS.length) {
-  console.log(`Loaded ${ROBOTS.length} products from ${path.relative(process.cwd(), CATALOGUE_PATH)}`);
-  console.log(`Categories: ${[...new Set(ROBOTS.map((r) => r.category))].join(', ')}`);
-}
+console.log(`Loaded ${ROBOTS.length} products from ${path.relative(process.cwd(), CATALOGUE_PATH)}`);
+console.log(`Categories: ${[...new Set(ROBOTS.map((r) => r.category))].join(', ')}`);
 
 // ---------------------------------------------------------------- tutorials
 

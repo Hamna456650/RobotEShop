@@ -58,20 +58,21 @@ const Navbar: React.FC = () => {
   // `whitespace-nowrap` matters: the bar is a fixed height, so a label that
   // wraps to two lines breaks the bar rather than growing it.
   const linkClass = (isActive: boolean) =>
-    "shrink-0 whitespace-nowrap text-[14px] font-normal no-underline transition-colors duration-150 " +
-    (isActive ? "text-[#ffffff]" : "text-[#888888] hover:text-[#ffffff]");
+    "shrink-0 whitespace-nowrap text-[14px] font-normal no-underline " +
+    (isActive ? "text-[#171717]" : "text-[#666666] hover:text-[#171717]");
 
   // react-router's NavLink did this for us; next/link has no active state.
   const isActive = (href: string) => pathname === href;
 
   return (
-    <header className="nav-bar shrink-0 h-[64px] bg-[#0a0a0a] border-b border-[rgba(255,255,255,0.08)] px-4 lg:px-6 flex items-center gap-6 overflow-x-auto">
+    <header className="nav-bar shrink-0 h-[64px] bg-[#fafafa] border-b border-[#ebebeb] px-4 lg:px-6 flex items-center gap-6 overflow-x-auto">
       <Link
         href="/"
-        className="shrink-0 flex items-center gap-2 mr-4 text-[14px] font-medium text-[#ffffff] no-underline"
+        className="shrink-0 flex items-center gap-2 mr-4 text-[14px] font-medium text-[#171717] no-underline"
       >
-        {/* The Servo mark: pure white on dark background */}
-        <Mark width={20} className="text-[#00c8ff]" />
+        {/* The Servo mark: the wordmark's glyph, and the one element allowed
+            to be pure #000. */}
+        <Mark width={20} className="text-[#000000]" />
         {brand}
       </Link>
 
@@ -102,7 +103,7 @@ const Navbar: React.FC = () => {
             header context where a 6px rectangle would read as a form field. */}
         <Link
           href="/assistant"
-          className="shrink-0 whitespace-nowrap rounded-full bg-[#00c8ff] px-[14px] py-[6px] text-[14px] font-medium leading-none text-[#0a0a0a] no-underline hover:bg-[#33d4ff] transition-colors duration-150"
+          className="shrink-0 whitespace-nowrap rounded-full bg-[#171717] px-[14px] py-[6px] text-[14px] font-normal leading-none text-white no-underline hover:bg-black"
         >
           Ask {brand}
         </Link>
@@ -113,21 +114,13 @@ const Navbar: React.FC = () => {
           The sign-in link carries the current path so it comes back here. A
           hairline on the left separates the account from the editorial pages
           the way the bar's bottom rule separates it from the page. */}
-      <div className="shrink-0 flex items-center gap-4 pl-6 border-l border-[rgba(255,255,255,0.08)] text-[14px] whitespace-nowrap">
+      <div className="shrink-0 flex items-center gap-4 pl-6 border-l border-[#ebebeb] text-[14px] whitespace-nowrap">
         {status === "signed-in" && (
           <>
-            <Link href="/dashboard" className={linkClass(isActive("/dashboard"))}>
-              Dashboard
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-[#ffffff] no-underline hover:underline underline-offset-2"
-            >
-              {displayName || "Signed in"}
-            </Link>
+            <span className="text-[#171717]">{displayName || "Signed in"}</span>
             <button
               type="button"
-              className="text-[#888888] hover:text-[#ffffff] transition-colors duration-150"
+              className="text-[#666666] hover:text-[#171717]"
               onClick={() => void signOut()}
             >
               Sign out
@@ -143,8 +136,8 @@ const Navbar: React.FC = () => {
           </Link>
         )}
       </div>
-      </header>
-    );
-  };
+    </header>
+  );
+};
 
 export default Navbar;

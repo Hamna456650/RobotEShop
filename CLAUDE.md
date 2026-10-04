@@ -35,7 +35,7 @@ actually renders, not aspirational.
 # UI — port 3000. Next.js 16 (App Router); needs Node 22+ and ui/.env
 # (copy ui/.env.example): the mock server's URL plus the assistant's keys.
 cd ui && npm ci              # first time only
-npm start                    # next dev
+npm start                    # mock server (unless 8009 already answers) + next dev, via scripts/dev.mjs
 npm run build                # next build — also the strictest check we have
 npm run serve                # next start, after a build
 npm run lint                 # eslint src (eslint-config-next)
@@ -44,7 +44,7 @@ npm run format               # prettier
 npx tsc --noEmit             # the type check used to verify UI changes
 npm test                     # vitest: the assistant's pure functions (validate, trim, cache, failover)
 
-# Mock backend — port 8009, must be running for the UI to show anything
+# Mock backend — port 8009. `npm start` in ui/ runs it for you; on its own:
 cd mock-server && node server.js
 
 # Scraper
@@ -219,7 +219,6 @@ them. It was moved off Create React App in September 2026; the design record is
 | `/catalog/[category]` | `src/app/catalog/[category]/page.tsx` | Catalogue with a category preset; the navbar strip links here |
 | `/tutorials` | `src/app/tutorials/page.tsx` | Tutorials |
 | `/community` | `src/app/community/page.tsx` | Community reviews — tag a catalogue product, score it, say what board you tested it on |
-| `/dashboard`, `/dashboard/settings` | `src/app/dashboard/*` | The signed-in home: `layout.tsx` (Sidebar + Topbar, navbar hidden by `ConditionalNavbar`) sends signed-out visitors to login. Every figure comes from `src/hooks/useDashboard.ts` (`/health`, `/catalog`, `/tutorials`, Supabase reviews); nothing is hard-coded. Sign-in, sign-up and email confirmation land here; a `?next=/` is turned into `/dashboard` by `afterSignIn()` in `components/auth/nextPath.ts` |
 | `/assistant` | `src/app/assistant/page.tsx` | The original chat-led screen: full-height panel beside the splash image |
 | `/auth/login`, `/auth/sign-up`, `/auth/forgot-password`, `/auth/update-password`, `/auth/error` | `src/app/auth/*/page.tsx` | Accounts — email + password on Supabase Auth, one centred card each. `/auth/confirm` is a route handler that turns an email link into a session |
 | any unmatched URL, any page that throws | `src/app/not-found.tsx`, `src/app/error.tsx` | The status pages: both render `components/status/StatusPage` inside the layout, so the navbar stays. The 404 names the path that failed; the error page offers `reset()` and shows the digest. No `global-error.tsx` on purpose. Record: [docs/superpowers/specs/2026-09-19-status-pages-design.md](docs/superpowers/specs/2026-09-19-status-pages-design.md) |
