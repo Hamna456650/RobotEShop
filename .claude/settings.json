@@ -17,7 +17,9 @@
       "PowerShell(npx tsc:*)",
       "PowerShell(npx eslint:*)",
       "PowerShell(Invoke-WebRequest:*)",
-      "PowerShell(Invoke-RestMethod:*)"
+      "PowerShell(Invoke-RestMethod:*)",
+      "ClaudeInChromeDomain(localhost:3000)",
+      "mcp__claude-in-chrome__tabs_context_mcp"
     ]
   }
 }

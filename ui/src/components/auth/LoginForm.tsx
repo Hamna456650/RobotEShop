@@ -7,7 +7,7 @@ import React, { useRef, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 import AuthCard from "./AuthCard";
 import { describeAuthError } from "./errors";
-import { safeNext } from "./nextPath";
+import { AFTER_SIGN_IN, safeNext } from "./nextPath";
 import PasswordInput from "./PasswordInput";
 
 const LoginForm: React.FC = () => {
@@ -41,7 +41,9 @@ const LoginForm: React.FC = () => {
       setError(describeAuthError(failure));
       return;
     }
-    router.push(next);
+    // Every sign-in lands on the dashboard. `next` still rides along to the
+    // sign-up link below.
+    router.push(AFTER_SIGN_IN);
     router.refresh();
   };
 

@@ -66,8 +66,9 @@ const Navbar: React.FC = () => {
 
   return (
     <header className="nav-bar shrink-0 h-[64px] bg-[#fafafa] border-b border-[#ebebeb] px-4 lg:px-6 flex items-center gap-6 overflow-x-auto">
+      {/* Home is the dashboard once signed in; the landing page otherwise. */}
       <Link
-        href="/"
+        href={status === "signed-in" ? "/dashboard" : "/"}
         className="shrink-0 flex items-center gap-2 mr-4 text-[14px] font-medium text-[#171717] no-underline"
       >
         {/* The Servo mark: the wordmark's glyph, and the one element allowed

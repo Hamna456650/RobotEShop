@@ -7,15 +7,13 @@ import React, { useRef, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 import AuthCard from "./AuthCard";
 import { describeAuthError } from "./errors";
-import { safeNext } from "./nextPath";
+import { AFTER_SIGN_IN, safeNext } from "./nextPath";
 import PasswordInput from "./PasswordInput";
 
-/* A new account lands on the assistant, whatever page the sign-up link was
-   on: it is the product's argument, and the first thing a new member should
-   see is the thing no other robotics store has. `?next=` is still carried to
-   the sign-in link so someone who already has an account goes back where they
-   were. */
-const AFTER_SIGN_UP = "/assistant";
+/* A new account lands on the dashboard, whatever page the sign-up link was
+   on: its new-account view is the start list (catalogue, tutorials, first
+   review). `?next=` is still carried to the sign-in link. */
+const AFTER_SIGN_UP = AFTER_SIGN_IN;
 
 /* Mirrors the check constraint on profiles.display_name and the project's
    password_min_length, so the server never rejects what the form accepted. */
