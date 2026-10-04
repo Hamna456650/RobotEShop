@@ -14,7 +14,9 @@ export function supabaseEnv(): { url: string; key: string } | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!url || !key || url.includes("your-project-ref") || key.includes("sb_publishable_")) {
+  // Real publishable keys start with "sb_publishable_", so only the exact
+  // placeholder from .env.example counts as unconfigured.
+  if (!url || !key || url.includes("your-project-ref") || key === "sb_publishable_...") {
     return null;
   }
 

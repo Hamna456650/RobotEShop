@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   // about the scraper or the mock server.
   agentRules: false,
 
+  // Hide the dev-mode "Compiling..." pill in the bottom corner.
+  devIndicators: false,
+
   async rewrites() {
     return ["catalog", "tutorials", "health"].map((route) => ({
       source: `/api/${route}`,
