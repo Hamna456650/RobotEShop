@@ -39,7 +39,19 @@ export async function updateSession(request: NextRequest) {
 
   // Do not put anything between the client creation and this call: the
   // refresh happens here, and code that runs before it sees a stale session.
-  await supabase.auth.getClaims();
+  //
+  // Capped, and never fatal. When Supabase cannot be reached (a paused
+  // project, no network) supabase-js retries with backoff, and that held every
+  // page for ~26 s. Reading is public, so a page must not wait on the session:
+  // after REFRESH_BUDGET_MS it is served as it stands and the refresh is left
+  // to the next request.
+  await Promise.race([
+    supabase.auth.getClaims().catch(() => undefined),
+    new Promise((resolve) => setTimeout(resolve, REFRESH_BUDGET_MS)),
+  ]);
 
   return response;
 }
+
+/** Long enough for a normal token refresh, short enough not to be noticed. */
+const REFRESH_BUDGET_MS = 3000;

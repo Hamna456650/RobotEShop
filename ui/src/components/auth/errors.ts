@@ -33,7 +33,7 @@ export function describeAuthError(error: AuthError | Error): string {
     text.includes("fetch failed") ||
     text.includes("network")
   ) {
-    return "Couldn't reach the sign-in service. Check your connection and try again.";
+    return "Couldn't reach the sign-in service. Check your connection; if it's fine, the account server is down, so try again later.";
   }
   return error.message;
 }
